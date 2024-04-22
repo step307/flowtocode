@@ -2,23 +2,9 @@
 
 [![NPM](https://img.shields.io/npm/v/flowtocode.svg?label=flowtocode)](https://www.npmjs.com/package/flowtocode) [![Downloads/week](https://img.shields.io/npm/dw/flowtocode.svg)](https://npmjs.org/package/flowtocode) [![License](https://img.shields.io/badge/License-BSD%203--Clause-brightgreen.svg)](https://raw.githubusercontent.com/salesforcecli/flowtocode/main/LICENSE.txt)
 
-## Using the template
+## Convert Salesforce Flows To Pseudocode
 
-This repository provides a template for creating a plugin for the Salesforce CLI. To convert this template to a working plugin:
-
-1. Please get in touch with the Platform CLI team. We want to help you develop your plugin.
-2. Generate your plugin:
-
-   ```
-   sf plugins install dev
-   sf dev generate plugin
-
-   git init -b main
-   git add . && git commit -m "chore: initial commit"
-   ```
-
-3. Create your plugin's repo in the salesforcecli github org
-4. When you're ready, replace the contents of this README with the information you want.
+Convert Salesforce Flows to pseudocode! Add the pseudocode to source control for more human-friendly diffs.
 
 ## Learn about `sf` plugins
 
@@ -111,35 +97,30 @@ sf plugins
 
 <!-- commands -->
 
-- [`sf hello world`](#sf-hello-world)
+- [`sf ftc generate code`](#sf-ftc-generate-code)
 
-## `sf hello world`
+## `sf ftc generate code`
 
-Say hello either to the world or someone you know.
+Convert a flow into pseudocode.
 
 ```
 USAGE
-  $ sf hello world [--json] [-n <value>]
+  $ sf ftc generate code -f <value> [--json] [--flags-dir <value>]
 
 FLAGS
-  -n, --name=<value>  [default: World] The name of the person you'd like to say hello to.
+  -f, --file=<value>  (required) The flow file to convert to pseudocode.
 
 GLOBAL FLAGS
-  --json  Format output as json.
+  --flags-dir=<value>  Import flag values from a directory.
+  --json               Format output as json.
 
 DESCRIPTION
-  Say hello either to the world or someone you know.
+  Convert a flow into pseudocode.
 
-  Say hello either to the world or someone you know.
+  Create pseudocode for the given flow & write it to standard output.
 
 EXAMPLES
-  Say hello to the world:
-
-    $ sf hello world
-
-  Say hello to someone you know:
-
-    $ sf hello world --name Astro
+  $ sf ftc generate code -f ./test.flow
 ```
 
 <!-- commandsstop -->

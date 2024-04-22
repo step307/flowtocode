@@ -59,8 +59,12 @@ export function isFlowLoop(obj: unknown): obj is FlowLoop {
 }
 
 export type FlowScreen = FlowNode & {
+  showHeader: boolean;
   connector: FlowConnector;
 };
+export function isFlowScreen(obj: unknown): obj is FlowScreen {
+  return typeof obj === 'object' && obj !== null && 'showHeader' in obj;
+}
 
 export type FlowStart = FlowNode & {
   connector: FlowConnector;
@@ -75,6 +79,9 @@ export type FlowAssignment = FlowNode & {
   assignmentItems: FlowAssignmentItem[];
   connector: FlowConnector;
 };
+export function isFlowAssignment(obj: unknown): obj is FlowAssignment {
+  return typeof obj === 'object' && obj !== null && 'assignmentItems' in obj;
+}
 
 export type FlowAssignmentItem = FlowBaseElement & {
   assignToReference: string;

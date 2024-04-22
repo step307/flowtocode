@@ -1,19 +1,15 @@
 # summary
 
-Summary of a command.
+Convert a flow into pseudocode.
 
 # description
 
-More information about a command. Don't repeat the summary.
+Create pseudocode for the given flow & write it to standard output.
 
-# flags.name.summary
+# flags.file.summary
 
-Description of a flag.
-
-# flags.name.description
-
-More information about a flag. Don't repeat the summary.
+The flow file to convert to pseudocode.
 
 # examples
 
-- <%= config.bin %> <%= command.id %>
+- <%= config.bin %> <%= command.id %> -f ./test.flow

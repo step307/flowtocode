@@ -23,8 +23,7 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
 
   public static readonly flags = {
     file: Flags.string({
-      summary: 'todo',
-      description: 'todo',
+      summary: messages.getMessage('flags.file.summary'),
       char: 'f',
       required: true,
     }),
