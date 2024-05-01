@@ -38,10 +38,6 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
     const flow: Flow = ((await parser.parseStringPromise(fileContent)) as ParsedXml).Flow;
     const parseTree: string = new FlowParser().toPseudoCode(flow);
     this.log(parseTree);
-    // this.log(JSON.stringify(flow, null, 2));
-    // for (const step of flow.actionCalls ?? []) {
-    //   this.log(JSON.stringify(step, null, 2));
-    // }
     return {
       path: '/Users/jdr/projects/flowtocode/src/commands/ftc/generate/code.ts',
     };

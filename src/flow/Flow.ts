@@ -1,3 +1,7 @@
+// =====================================================================================================================
+// Base Flow Types
+// =====================================================================================================================
+
 export type Metadata = {
   fullName: string;
 };
@@ -14,6 +18,12 @@ export type Flow = Metadata & {
   loops?: FlowLoop[];
   migratedFromWorkflowRuleName?: string;
   screens?: FlowScreen[];
+  decisions?: FlowDecision[];
+  recordLookups?: FlowRecordLookup[];
+  recordRollbacks?: FlowRecordRollback[];
+  recordCreates?: FlowRecordCreate[];
+  recordUpdates?: FlowRecordUpdate[];
+  recordDeletes?: FlowRecordDelete[];
   segment?: string;
   start: FlowStart;
   startElementReference?: string;
@@ -34,6 +44,27 @@ export type FlowElement = {
 
 export type FlowNode = FlowElement & {
   elementSubtype: string;
+  label: string;
+};
+
+// =====================================================================================================================
+// Connector Flow Types
+// =====================================================================================================================
+
+export type FlowDecision = FlowNode & {
+  defaultConnector: FlowConnector;
+  defaultConnectorLabel: string;
+  rules: FlowRule[];
+};
+export function isFlowDecision(obj: unknown): obj is FlowDecision {
+  return typeof obj === 'object' && obj !== null && 'rules' in obj && 'defaultConnector' in obj;
+}
+
+export type FlowRule = FlowElement & {
+  conditionLogic: string;
+  conditions: FlowCondition[];
+  connector: FlowConnector;
+  doesRequireRecordChangedToMeetCriteria: boolean;
   label: string;
 };
 
@@ -79,9 +110,45 @@ export type FlowAssignment = FlowNode & {
   assignmentItems: FlowAssignmentItem[];
   connector: FlowConnector;
 };
+
 export function isFlowAssignment(obj: unknown): obj is FlowAssignment {
   return typeof obj === 'object' && obj !== null && 'assignmentItems' in obj;
 }
+
+export type FlowRecordLookup = FlowNode & {
+  connector: FlowConnector;
+  faultConnector: FlowConnector;
+};
+
+export type FlowRecordRollback = FlowNode & {
+  connector: FlowConnector;
+};
+
+export type FlowRecordCreate = FlowNode & {
+  connector: FlowConnector;
+  faultConnector: FlowConnector;
+};
+
+export type FlowRecordUpdate = FlowNode & {
+  connector: FlowConnector;
+  faultConnector: FlowConnector;
+};
+
+export type FlowRecordDelete = FlowNode & {
+  connector: FlowConnector;
+  faultConnector: FlowConnector;
+};
+
+// =====================================================================================================================
+// Other Flow Types
+// =====================================================================================================================
+
+export type FlowCondition = FlowBaseElement & {
+  conditionType: FlowWaitConditionType;
+  leftValueReference: string;
+  operator: FlowComparisonOperator;
+  rightValue: FlowElementReferenceOrValue;
+};
 
 export type FlowAssignmentItem = FlowBaseElement & {
   assignToReference: string;
@@ -109,6 +176,10 @@ export type FlowElementReferenceOrValue = {
   stringValue?: string;
 };
 
+// =====================================================================================================================
+// Flow Enums
+// =====================================================================================================================
+
 export enum FlowAssignmentOperator {
   Add = 'Add',
   AddAtStart = 'AddAtStart',
@@ -131,4 +202,29 @@ export enum FlowDataType {
   DateTime = 'DateTime',
   Number = 'Number',
   String = 'String',
+}
+
+export enum FlowWaitConditionType {
+  EntryCondition = 'EntryCondition',
+  ExitCondition = 'ExitCondition',
+}
+
+export enum FlowComparisonOperator {
+  Contains = 'Contains',
+  EndsWith = 'EndsWith',
+  EqualTo = 'EqualTo',
+  GreaterThan = 'GreaterThan',
+  GreaterThanOrEqualTo = 'GreaterThanOrEqualTo',
+  In = 'In',
+  IsChanged = 'IsChanged',
+  IsNull = 'IsNull',
+  LessThan = 'LessThan',
+  LessThanOrEqualTo = 'LessThanOrEqualTo',
+  None = 'None',
+  NotEqualTo = 'NotEqualTo',
+  NotIn = 'NotIn',
+  StartsWith = 'StartsWith',
+  WasSelected = 'WasSelected',
+  WasSet = 'WasSet',
+  WasVisited = 'WasVisited',
 }

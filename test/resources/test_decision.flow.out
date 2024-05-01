@@ -1,0 +1,7 @@
+Get_Accounts
+LOOP: Account_Loop
+  IF: If Account Number starts with 1
+    Delete_Account
+  ELSE:
+    Update_Account
+APEX CALL: Do_Bulk_Action

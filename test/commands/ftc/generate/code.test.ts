@@ -16,9 +16,18 @@ describe('ftc generate code', () => {
     $$.restore();
   });
 
-  it('runs on test.flow', async () => {
+  it('runs on test flow', async () => {
     await FtcGenerateCode.run(['--file', './test/resources/test.flow']);
     const expected: string = await fs.readFile('./test/resources/test.flow.out', 'utf8');
+    const output = sfCommandStubs.log
+      .getCalls()
+      .flatMap((c) => c.args)
+      .join('\n');
+    expect(output).to.equal(expected);
+  });
+  it('runs on decision flow', async () => {
+    await FtcGenerateCode.run(['--file', './test/resources/test_decision.flow']);
+    const expected: string = await fs.readFile('./test/resources/test_decision.flow.out', 'utf8');
     const output = sfCommandStubs.log
       .getCalls()
       .flatMap((c) => c.args)

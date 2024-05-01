@@ -49,9 +49,11 @@ export class ParseTreeNode {
 
 export class FlowParser {
   private flowElementByName: Map<string, Flow.FlowBaseElement>;
+  private flowLoopStack: Flow.FlowLoop[];
 
   public constructor() {
     this.flowElementByName = new Map<string, Flow.FlowBaseElement>();
+    this.flowLoopStack = [];
   }
 
   public toPseudoCode(flow: Flow.Flow): string {
@@ -85,14 +87,18 @@ export class FlowParser {
   }
 
   private parseElement(parentNode: ParseTreeNode, element: Flow.FlowElement): void {
-    if (parentNode.getFlowElement() === element) {
+    if (this.flowLoopStack.includes(element as Flow.FlowLoop)) {
       return;
     } else if (Flow.isFlowActionCall(element)) {
       this.parseActionCallElement(parentNode, element);
     } else if (Flow.isFlowScreen(element)) {
       this.parseScreenElement(parentNode, element);
     } else if (Flow.isFlowLoop(element)) {
+      this.flowLoopStack.push(element);
       this.parseLoopElement(parentNode, element);
+      this.flowLoopStack.pop();
+    } else if (Flow.isFlowDecision(element)) {
+      this.parseDecisionElement(parentNode, element);
     } else if (Flow.isFlowAssignment(element)) {
       parentNode.addChild(new ParseTreeNode('ASSIGNMENT: ' + element.name, element));
       this.parseConnector(parentNode, element);
@@ -138,9 +144,29 @@ export class FlowParser {
     }
   }
 
-  private parseConnector(parentNode: ParseTreeNode, element: Flow.FlowElement): void {
-    if ('connector' in element) {
-      const child = this.getElementFromConnector(element.connector as Flow.FlowConnector);
+  private parseDecisionElement(parentNode: ParseTreeNode, flowElement: Flow.FlowDecision): void {
+    for (const ruleElement of flowElement.rules) {
+      this.parseRuleElement(parentNode, ruleElement);
+    }
+    const elseNode = new ParseTreeNode('ELSE:', this.getElementFromConnector(flowElement.defaultConnector));
+    parentNode.addChild(elseNode);
+    this.parseElement(elseNode, this.getElementFromConnector(flowElement.defaultConnector));
+  }
+
+  private parseRuleElement(parentNode: ParseTreeNode, ruleElement: Flow.FlowRule): void {
+    const ruleNode = new ParseTreeNode('IF: ' + ruleElement.label, ruleElement);
+    parentNode.addChild(ruleNode);
+    this.parseConnector(ruleNode, ruleElement);
+  }
+
+  private parseConnector(
+    parentNode: ParseTreeNode,
+    element: Flow.FlowElement,
+    connectorName: string = 'connector'
+  ): void {
+    if (connectorName in element) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+      const child = this.getElementFromConnector((element as any)[connectorName] as Flow.FlowConnector);
       if (child) {
         this.parseElement(parentNode, child);
       }
@@ -158,38 +184,59 @@ export class FlowParser {
   // eslint-disable-next-line class-methods-use-this
   private getFlowElementByName(flow: Flow.Flow): Map<string, Flow.FlowBaseElement> {
     const apiToFlowNode = new Map<string, Flow.FlowBaseElement>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-function-return-type
+    const addToMap = (elements: any[]) => {
+      if (elements) {
+        if (!Array.isArray(elements)) {
+          elements = [elements];
+        }
+        for (const element of elements) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+          apiToFlowNode.set(element.name, element);
+        }
+      }
+    };
+
     if (flow.actionCalls) {
-      if (!Array.isArray(flow.actionCalls)) {
-        flow.actionCalls = [flow.actionCalls];
-      }
-      for (const action of flow.actionCalls) {
-        apiToFlowNode.set(action.name, action);
-      }
+      addToMap(flow.actionCalls);
     }
     if (flow.screens) {
-      if (!Array.isArray(flow.screens)) {
-        flow.screens = [flow.screens];
-      }
-      for (const screen of flow.screens) {
-        apiToFlowNode.set(screen.name, screen);
-      }
+      addToMap(flow.screens);
     }
     if (flow.loops) {
-      if (!Array.isArray(flow.loops)) {
-        flow.loops = [flow.loops];
-      }
-      for (const loop of flow.loops) {
-        apiToFlowNode.set(loop.name, loop);
-      }
+      addToMap(flow.loops);
     }
     if (flow.assignments) {
-      if (!Array.isArray(flow.assignments)) {
-        flow.assignments = [flow.assignments];
+      addToMap(flow.assignments);
+    }
+    if (flow.decisions) {
+      if (!Array.isArray(flow.decisions)) {
+        flow.decisions = [flow.decisions];
       }
-      for (const assignment of flow.assignments) {
-        apiToFlowNode.set(assignment.name, assignment);
+      addToMap(flow.decisions);
+
+      for (const decision of flow.decisions) {
+        if (!Array.isArray(decision.rules)) {
+          decision.rules = [decision.rules];
+        }
       }
     }
+    if (flow.recordLookups) {
+      addToMap(flow.recordLookups);
+    }
+    if (flow.recordRollbacks) {
+      addToMap(flow.recordRollbacks);
+    }
+    if (flow.recordCreates) {
+      addToMap(flow.recordCreates);
+    }
+    if (flow.recordUpdates) {
+      addToMap(flow.recordUpdates);
+    }
+    if (flow.recordDeletes) {
+      addToMap(flow.recordDeletes);
+    }
+
     return apiToFlowNode;
   }
 }
