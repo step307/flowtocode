@@ -22,7 +22,8 @@ describe('ftc generate code', () => {
     const output = sfCommandStubs.log
       .getCalls()
       .flatMap((c) => c.args)
-      .join('\n');
+      .join('\n')
+      .replace(/\r/g, '');
     expect(output).to.equal(expected);
   });
   it('runs on decision flow', async () => {
@@ -31,7 +32,8 @@ describe('ftc generate code', () => {
     const output = sfCommandStubs.log
       .getCalls()
       .flatMap((c) => c.args)
-      .join('\n');
+      .join('\n')
+      .replace(/\r/g, '');
     expect(output).to.equal(expected);
   });
 });
