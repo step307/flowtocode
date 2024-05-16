@@ -1,66 +1,501 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
-    <actionCalls>
-        <name>Do_Bulk_Action</name>
-        <label>Do Bulk Action</label>
-        <locationX>176</locationX>
-        <locationY>734</locationY>
-        <actionName>ApexBulkAction</actionName>
-        <actionType>apex</actionType>
-        <flowTransactionModel>Automatic</flowTransactionModel>
-        <nameSegment>ApexBulkAction</nameSegment>
-        <versionSegment>1</versionSegment>
-    </actionCalls>
     <apiVersion>60.0</apiVersion>
-    <constants>
-        <name>Sample_Account_Name</name>
+    <assignments>
+        <description>Assigns the logged in user as the Current User.</description>
+        <name>Assign_Logged_in_User_to_Current_User_Variable</name>
+        <label>Assign Logged in User to Current User Variable</label>
+        <locationX>600</locationX>
+        <locationY>458</locationY>
+        <assignmentItems>
+            <assignToReference>CurrentUser.Id</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$User.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>CurrentUser.Name</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>CurrentUserFullNameTillUser</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Welcome_Screen</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <description>Assigns the selected user to the Current User variable.</description>
+        <name>Assign_Selected_User_to_Current_User_Variable</name>
+        <label>Assign Selected User to Current User Variable</label>
+        <locationX>864</locationX>
+        <locationY>782</locationY>
+        <assignmentItems>
+            <assignToReference>CurrentUser</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>TillUsers.firstSelectedRow</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>CurrentUser.Name</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>TillUsers.firstSelectedRow.Name</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Welcome_Screen</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <description>Counts the number of location records from the get record.</description>
+        <name>Count_Location_Records</name>
+        <label>Count Location Records</label>
+        <locationX>1128</locationX>
+        <locationY>242</locationY>
+        <assignmentItems>
+            <assignToReference>NumberOfLocationRecords</assignToReference>
+            <operator>AssignCount</operator>
+            <value>
+                <elementReference>Get_Locations</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>Is_User_Till_User</targetReference>
+        </connector>
+    </assignments>
+    <choices>
+        <description>Choose to close an existing till.</description>
+        <name>CloseaTill</name>
+        <choiceText>Close a Till</choiceText>
         <dataType>String</dataType>
         <value>
-            <stringValue>&quot;Sample Account Name&quot;</stringValue>
+            <stringValue>Close a Till</stringValue>
         </value>
-    </constants>
+    </choices>
+    <choices>
+        <name>No</name>
+        <choiceText>No</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>No</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <description>Choose to open a new till</description>
+        <name>OpenaNewTill</name>
+        <choiceText>Open a New Till</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Open a New Till</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>Yes</name>
+        <choiceText>Yes</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Yes</stringValue>
+        </value>
+    </choices>
     <decisions>
-        <name>Account_Decision</name>
-        <label>Account Decision</label>
-        <locationX>396</locationX>
-        <locationY>350</locationY>
+        <description>Checks to see if the org has one or multiple location records.</description>
+        <name>Check_Number_of_Locations</name>
+        <label>Check Number of Locations</label>
+        <locationX>336</locationX>
+        <locationY>2090</locationY>
         <defaultConnector>
-            <targetReference>Update_Account</targetReference>
+            <isGoTo>true</isGoTo>
+            <targetReference>Fault_Message</targetReference>
         </defaultConnector>
         <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
         <rules>
-            <name>If_Account_Number_Starts_With_1</name>
+            <name>One_Location</name>
             <conditionLogic>and</conditionLogic>
             <conditions>
-                <leftValueReference>Account_Loop.AccountNumber</leftValueReference>
-                <operator>StartsWith</operator>
+                <leftValueReference>NumberOfLocationRecords</leftValueReference>
+                <operator>EqualTo</operator>
                 <rightValue>
-                    <stringValue>1</stringValue>
+                    <numberValue>1.0</numberValue>
                 </rightValue>
             </conditions>
             <connector>
-                <targetReference>Delete_Account</targetReference>
+                <targetReference>Details_About_Till_One_Location</targetReference>
             </connector>
-            <label>If Account Number starts with 1</label>
+            <label>One Location</label>
+        </rules>
+        <rules>
+            <name>More_Than_One_Location</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>NumberOfLocationRecords</leftValueReference>
+                <operator>GreaterThan</operator>
+                <rightValue>
+                    <numberValue>1.0</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Details_About_Till</targetReference>
+            </connector>
+            <label>More Than One Location</label>
         </rules>
     </decisions>
+    <decisions>
+        <description>Checks to see if the current user has an open till shift or not.</description>
+        <name>Does_User_Have_Opened_Till</name>
+        <label>Does User Have Opened Till</label>
+        <locationX>336</locationX>
+        <locationY>1382</locationY>
+        <defaultConnector>
+            <targetReference>Check_Number_of_Locations</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>CurrentUserHasOpenTillShift</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Open_Till_Shifts_related_to_Current_User</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Does_User_Want_to_Close_Open_Till_Shifts</targetReference>
+            </connector>
+            <label>CurrentUserHasOpenTillShift</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <description>Checks to see if the user wants to close their open tills</description>
+        <name>Does_User_want_to_Close_Their_Open_Tills</name>
+        <label>Does User want to Close Their Open Tills</label>
+        <locationX>182</locationX>
+        <locationY>1598</locationY>
+        <defaultConnector>
+            <targetReference>Check_Number_of_Locations</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Yes_Close_Open_Tills</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Would_You_Like_to_Close_Your_Open_Tills</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <elementReference>Yes</elementReference>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>End_of_Shift_Close_Open_Till</targetReference>
+            </connector>
+            <label>Yes Close Open Tills</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <description>Checks to see if the user chose to open or close a till from the last screen.</description>
+        <name>Is_User_Opening_or_Closing_a_Till</name>
+        <label>Is User Opening or Closing a Till</label>
+        <locationX>1128</locationX>
+        <locationY>1166</locationY>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>UserOpensTill</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Open_or_Close_a_Till</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Open a New Till</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_Open_Till_Shifts_related_to_Current_User</targetReference>
+            </connector>
+            <label>UserOpensTill</label>
+        </rules>
+        <rules>
+            <name>UserClosesTill</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Open_or_Close_a_Till</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Close a Till</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>End_of_Shift</targetReference>
+            </connector>
+            <label>UserClosesTill</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <description>Checks to see if the user accessing this flow is a till user. If not, show them a list of all till users so they can select their own.</description>
+        <name>Is_User_Till_User</name>
+        <label>Is User Till User</label>
+        <locationX>1128</locationX>
+        <locationY>350</locationY>
+        <defaultConnector>
+            <targetReference>Welcome_Screen</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Current_user_is_till_user</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$User.Till_User__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Assign_Logged_in_User_to_Current_User_Variable</targetReference>
+            </connector>
+            <label>Current user is till user</label>
+        </rules>
+        <rules>
+            <name>Current_user_is_not_a_till_user</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$User.Till_User__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Get_Till_Users</targetReference>
+            </connector>
+            <label>Current user is not a till user</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <description>Checks to see if any users records where Till User = True exist.</description>
+        <name>Were_Till_Users_Found</name>
+        <label>Were Till Users Found</label>
+        <locationX>996</locationX>
+        <locationY>566</locationY>
+        <defaultConnector>
+            <targetReference>No_Till_Users_Error</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Default Outcome</defaultConnectorLabel>
+        <rules>
+            <name>Till_Users_Found</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>Get_Till_Users</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>Select_Till_User</targetReference>
+            </connector>
+            <label>Till Users Found</label>
+        </rules>
+    </decisions>
+    <description>Screen flow used to start a shift for the Till Management process.</description>
+    <dynamicChoiceSets>
+        <description>Displays the Location options.</description>
+        <name>LocationPicklistChoices</name>
+        <dataType>String</dataType>
+        <displayField>Name</displayField>
+        <object>Location__c</object>
+        <sortField>Name</sortField>
+        <sortOrder>Asc</sortOrder>
+        <valueField>Id</valueField>
+    </dynamicChoiceSets>
+    <dynamicChoiceSets>
+        <description>Displays the POS Terminals based on the chosen location.</description>
+        <name>POSTerminalPicklistChoices</name>
+        <dataType>String</dataType>
+        <displayField>Name</displayField>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Location__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>Location</elementReference>
+            </value>
+        </filters>
+        <object>POS_Terminal__c</object>
+        <valueField>Id</valueField>
+    </dynamicChoiceSets>
+    <dynamicChoiceSets>
+        <description>Shows the POS Terminal records for the one location</description>
+        <name>POSTerminalPicklistChoicesOneLocation</name>
+        <dataType>String</dataType>
+        <displayField>Name</displayField>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Location__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <object>POS_Terminal__c</object>
+        <valueField>Id</valueField>
+    </dynamicChoiceSets>
+    <dynamicChoiceSets>
+        <description>Table that shows a list of all users where Till User = True.</description>
+        <name>TillUserTable</name>
+        <dataType>String</dataType>
+        <displayField>Name</displayField>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Till_User__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>IsActive</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>User</object>
+        <sortField>FirstName</sortField>
+        <sortOrder>Asc</sortOrder>
+    </dynamicChoiceSets>
     <environments>Default</environments>
-    <interviewLabel>Test_Flow {!$Flow.CurrentDateTime}</interviewLabel>
-    <label>Test_Decision_Flow</label>
-    <loops>
-        <name>Account_Loop</name>
-        <label>Account Loop</label>
-        <locationX>176</locationX>
-        <locationY>242</locationY>
-        <collectionReference>Accounts</collectionReference>
-        <iterationOrder>Asc</iterationOrder>
-        <nextValueConnector>
-            <targetReference>Account_Decision</targetReference>
-        </nextValueConnector>
-        <noMoreValuesConnector>
-            <targetReference>Do_Bulk_Action</targetReference>
-        </noMoreValuesConnector>
-    </loops>
+    <formulas>
+        <description>Sums the actual, counted float.</description>
+        <name>ActualFloatFormula</name>
+        <dataType>Currency</dataType>
+        <expression>{!SumOfPenniesFormula} +
+{!SumOfNickelsFormula} +
+{!SumOfDimesFormula} +
+{!SumOfQuartersFormula} +
+{!SumOfHalfDollarsFormula} +
+{!SumOf1BillsFormula} +
+{!SumOf2BillsFormula} +
+{!SumOf5BillsFormula} +
+{!SumOf10BillsFormula} +
+{!SumOf20BillsFormula} +
+{!SumOf50BillsFormula} +
+{!SumOf100BillsFormula}</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Concatenates the logged in user&apos;s first and last name.</description>
+        <name>CurrentUserFullNameTillUser</name>
+        <dataType>String</dataType>
+        <expression>{!$User.FirstName} + &quot; &quot; + {!$User.LastName}</expression>
+    </formulas>
+    <formulas>
+        <description>Calculates the default float amount based on what was entered into the custom setting.</description>
+        <name>DefaultFloatAmountFormula</name>
+        <dataType>Currency</dataType>
+        <expression>{!$Setup.TREX1__Till_Configuration__c.TREX1__Default_Float_Amount__c}</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Name for the Shift Deposit</description>
+        <name>ShiftDepositName</name>
+        <dataType>String</dataType>
+        <expression>{!CurrentUser.Name} + &quot; &quot; + &quot;Shell Shift Deposit&quot;</expression>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the $100 bills based on the user&apos;s input.</description>
+        <name>SumOf100BillsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_100_Bills})),100 * {!Number_of_100_Bills}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the $10 bills based on the user&apos;s input.</description>
+        <name>SumOf10BillsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_10_Bills})),10 * {!Number_of_10_Bills}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the $1 bills based on the user&apos;s input.</description>
+        <name>SumOf1BillsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_1_Bills})), 1 * {!Number_of_1_Bills}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the $20 bills based on the user&apos;s input.</description>
+        <name>SumOf20BillsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_20_Bills})),20 * {!Number_of_20_Bills}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the $2 bills based on the user&apos;s input.</description>
+        <name>SumOf2BillsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_2_Bills})), 2 * {!Number_of_2_Bills}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the $50 bills based on the user&apos;s input.</description>
+        <name>SumOf50BillsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_50_Bills})),50 * {!Number_of_50_Bills}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the $5 bills based on the user&apos;s input.</description>
+        <name>SumOf5BillsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_5_Bills})),5 * {!Number_of_5_Bills}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the dimes based on the user&apos;s input.</description>
+        <name>SumOfDimesFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_Dimes})),0.1 * {!Number_of_Dimes}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the half dollars based on the user&apos;s input.</description>
+        <name>SumOfHalfDollarsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_Half_Dollars})),0.5 * {!Number_of_Half_Dollars}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the nickels based on the user&apos;s input.</description>
+        <name>SumOfNickelsFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_Nickels})),0.05 * {!Number_of_Nickels}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the pennies based on the user&apos;s input.</description>
+        <name>SumOfPenniesFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_Pennies})),0.01 * {!Number_of_Pennies}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sums the dollar value of the quarters based on the user&apos;s input.</description>
+        <name>SumOfQuartersFormula</name>
+        <dataType>Currency</dataType>
+        <expression>IF(NOT(ISNULL({!Number_of_Quarters})),0.25 * {!Number_of_Quarters}, 0)</expression>
+        <scale>2</scale>
+    </formulas>
+    <formulas>
+        <description>Sets the naming convention of the Till Shift name.</description>
+        <name>TillShiftName</name>
+        <dataType>String</dataType>
+        <expression>{!CurrentUser.Name} + &quot; &quot; +  {!POS_Terminal_Picklist} + &quot; &quot; + TEXT({!Start_Time})</expression>
+    </formulas>
+    <interviewLabel>Till Management {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Till Management Start of Shift</label>
     <processMetadataValues>
         <name>BuilderType</name>
         <value>
@@ -80,62 +515,838 @@
         </value>
     </processMetadataValues>
     <processType>Flow</processType>
-    <recordDeletes>
-        <name>Delete_Account</name>
-        <label>Delete Account</label>
-        <locationX>264</locationX>
-        <locationY>458</locationY>
+    <recordCreates>
+        <description>Creates the shell Shift Deposit record.</description>
+        <name>Create_Shell_Shift_Deposit</name>
+        <label>Create Shell Shift Deposit</label>
+        <locationX>336</locationX>
+        <locationY>2822</locationY>
+        <faultConnector>
+            <isGoTo>true</isGoTo>
+            <targetReference>Fault_Message</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>Amount__c</field>
+            <value>
+                <numberValue>0.0</numberValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Deposit_Time__c</field>
+            <value>
+                <elementReference>$System.OriginDateTime</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Name</field>
+            <value>
+                <elementReference>ShiftDepositName</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status__c</field>
+            <value>
+                <stringValue>Open</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Till_Shift__c</field>
+            <value>
+                <elementReference>Create_Till_Shift</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Shift_Deposit__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+    <recordCreates>
+        <description>Creates a Till Shift record.</description>
+        <name>Create_Till_Shift</name>
+        <label>Create Till Shift</label>
+        <locationX>336</locationX>
+        <locationY>2714</locationY>
         <connector>
-            <targetReference>Account_Loop</targetReference>
+            <targetReference>Create_Shell_Shift_Deposit</targetReference>
         </connector>
-        <inputReference>Account_Loop</inputReference>
-    </recordDeletes>
+        <faultConnector>
+            <isGoTo>true</isGoTo>
+            <targetReference>Fault_Message</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>Actual_Start_of_Shift_Float__c</field>
+            <value>
+                <elementReference>ActualFloatFormula</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Name</field>
+            <value>
+                <elementReference>TillShiftName</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>POS_Terminal__c</field>
+            <value>
+                <elementReference>POS_Terminal_Picklist</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Staff_Member__c</field>
+            <value>
+                <elementReference>CurrentUser.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Start_Time__c</field>
+            <value>
+                <elementReference>Start_Time</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Start_of_Shift_Notes__c</field>
+            <value>
+                <elementReference>Notes</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Till_Shift__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
     <recordLookups>
-        <name>Get_Accounts</name>
-        <label>Get Accounts</label>
-        <locationX>176</locationX>
+        <description>Get all the location records.</description>
+        <name>Get_Locations</name>
+        <label>Get Locations</label>
+        <locationX>1128</locationX>
         <locationY>134</locationY>
         <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Account_Loop</targetReference>
+            <targetReference>Count_Location_Records</targetReference>
         </connector>
+        <faultConnector>
+            <isGoTo>true</isGoTo>
+            <targetReference>Fault_Message</targetReference>
+        </faultConnector>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Location__c</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordLookups>
+        <description>Gets Till Shifts related to the current user where Status = Open</description>
+        <name>Get_Open_Till_Shifts_related_to_Current_User</name>
+        <label>Get Open Till Shifts related to Current User</label>
+        <locationX>336</locationX>
+        <locationY>1274</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>Does_User_Have_Opened_Till</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Roll_Back_Records</targetReference>
+        </faultConnector>
         <filterLogic>and</filterLogic>
         <filters>
-            <field>Name</field>
+            <field>Shift_Status__c</field>
             <operator>EqualTo</operator>
             <value>
-                <elementReference>Sample_Account_Name</elementReference>
+                <stringValue>Open</stringValue>
             </value>
         </filters>
-        <object>Account</object>
-        <outputReference>Accounts</outputReference>
-        <queriedFields>Id</queriedFields>
-        <queriedFields>AccountNumber</queriedFields>
+        <filters>
+            <field>Staff_Member__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>CurrentUser.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Till_Shift__c</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
     </recordLookups>
-    <recordUpdates>
-        <name>Update_Account</name>
-        <label>Update Account</label>
-        <locationX>528</locationX>
+    <recordLookups>
+        <description>Get a list of users where Till User = true</description>
+        <name>Get_Till_Users</name>
+        <label>Get Till Users</label>
+        <locationX>996</locationX>
         <locationY>458</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
         <connector>
-            <targetReference>Account_Loop</targetReference>
+            <targetReference>Were_Till_Users_Found</targetReference>
         </connector>
-        <inputReference>Account_Loop</inputReference>
-    </recordUpdates>
+        <faultConnector>
+            <isGoTo>true</isGoTo>
+            <targetReference>Fault_Message</targetReference>
+        </faultConnector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Till_User__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>IsActive</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>User</object>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+        <sortField>Name</sortField>
+        <sortOrder>Asc</sortOrder>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+    <recordRollbacks>
+        <description>Rolls back created records if the flow errors out.</description>
+        <name>Roll_Back_Records</name>
+        <label>Roll Back Records</label>
+        <locationX>1392</locationX>
+        <locationY>1382</locationY>
+        <connector>
+            <targetReference>Fault_Message</targetReference>
+        </connector>
+    </recordRollbacks>
+    <screens>
+        <description>Screen where Front Desk user counts the float at the start of their till shift.</description>
+        <name>Count_Start_of_Shift_Float</name>
+        <label>Count Start of Shift Float</label>
+        <locationX>336</locationX>
+        <locationY>2498</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Finalize_and_Submit</targetReference>
+        </connector>
+        <fields>
+            <name>CountStartofShiftFlowMessage</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 178, 173); font-size: 20px; background-color: rgb(255, 255, 255);&quot;&gt;Count your Cash&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Count the amount of each type of coin and bill below to see the total amount of cash in your till. &lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;In the next step you&apos;ll be able to compare that agains the amount you should expect to see. &lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Coins_in_Till</name>
+            <fieldText>Coins in Till</fieldText>
+            <fieldType>RegionContainer</fieldType>
+            <fields>
+                <name>Coins_in_Till_Column1</name>
+                <fieldType>Region</fieldType>
+                <fields>
+                    <name>Number_of_Pennies</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of Pennies</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOfPennies</name>
+                    <fieldText>&lt;p&gt;Sum of Pennies&lt;/p&gt;&lt;p&gt;{!SumOfPenniesFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <fields>
+                    <name>Number_of_Dimes</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of Dimes</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOfDimes</name>
+                    <fieldText>&lt;p&gt;Sum of Dimes&lt;/p&gt;&lt;p&gt;{!SumOfDimesFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <fields>
+                    <name>Number_of_Half_Dollars</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of Half Dollars</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOfHalfDollars</name>
+                    <fieldText>&lt;p&gt;Sum of Half Dollars&lt;/p&gt;&lt;p&gt;{!SumOfHalfDollarsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <inputParameters>
+                    <name>width</name>
+                    <value>
+                        <stringValue>6</stringValue>
+                    </value>
+                </inputParameters>
+                <isRequired>false</isRequired>
+            </fields>
+            <fields>
+                <name>Coins_in_Till_Column2</name>
+                <fieldType>Region</fieldType>
+                <fields>
+                    <name>Number_of_Nickels</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of Nickels</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOfNickels</name>
+                    <fieldText>&lt;p&gt;Sum of Nickels&lt;/p&gt;&lt;p&gt;{!SumOfNickelsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <fields>
+                    <name>Number_of_Quarters</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of Quarters</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOfQuarters</name>
+                    <fieldText>&lt;p&gt;Sum of Quarters&lt;/p&gt;&lt;p&gt;{!SumOfQuartersFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <inputParameters>
+                    <name>width</name>
+                    <value>
+                        <stringValue>6</stringValue>
+                    </value>
+                </inputParameters>
+                <isRequired>false</isRequired>
+            </fields>
+            <isRequired>false</isRequired>
+            <regionContainerType>SectionWithHeader</regionContainerType>
+        </fields>
+        <fields>
+            <name>Bills_In_Till</name>
+            <fieldText>Bills In Till</fieldText>
+            <fieldType>RegionContainer</fieldType>
+            <fields>
+                <name>Bills_In_Till_Column1</name>
+                <fieldType>Region</fieldType>
+                <fields>
+                    <name>Number_of_1_Bills</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of $1 Bills</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOf1Bills</name>
+                    <fieldText>&lt;p&gt;Sum of $1 Bills&lt;/p&gt;&lt;p&gt;{!SumOf1BillsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <fields>
+                    <name>Number_of_5_Bills</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of $5 Bills</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOf5Bills</name>
+                    <fieldText>&lt;p&gt;Sum of $5 Bills&lt;/p&gt;&lt;p&gt;{!SumOf5BillsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <fields>
+                    <name>Number_of_20_Bills</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of $20 Bills</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOf20Bills</name>
+                    <fieldText>&lt;p&gt;Sum of $20 Bills&lt;/p&gt;&lt;p&gt;{!SumOf20BillsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <fields>
+                    <name>Number_of_100_Bills</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of $100 Bills</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOf100Bills</name>
+                    <fieldText>&lt;p&gt;Sum of $100 Bills&lt;/p&gt;&lt;p&gt;{!SumOf100BillsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <inputParameters>
+                    <name>width</name>
+                    <value>
+                        <stringValue>6</stringValue>
+                    </value>
+                </inputParameters>
+                <isRequired>false</isRequired>
+            </fields>
+            <fields>
+                <name>Bills_In_Till_Column2</name>
+                <fieldType>Region</fieldType>
+                <fields>
+                    <name>Number_of_2_Bills</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of $2 Bills</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOf2Bills</name>
+                    <fieldText>&lt;p&gt;Sum of $2 Bills&lt;/p&gt;&lt;p&gt;{!SumOf2BillsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <fields>
+                    <name>Number_of_10_Bills</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of $10 Bills</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOf10Bills</name>
+                    <fieldText>&lt;p&gt;Sum of $10 Bills&lt;/p&gt;&lt;p&gt;{!SumOf10BillsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <fields>
+                    <name>Number_of_50_Bills</name>
+                    <dataType>Number</dataType>
+                    <fieldText>Number of $50 Bills</fieldText>
+                    <fieldType>InputField</fieldType>
+                    <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+                    <isRequired>false</isRequired>
+                    <scale>0</scale>
+                </fields>
+                <fields>
+                    <name>SumOf50Bills</name>
+                    <fieldText>&lt;p&gt;Sum of $50 Bills&lt;/p&gt;&lt;p&gt;{!SumOf50BillsFormula}&lt;/p&gt;</fieldText>
+                    <fieldType>DisplayText</fieldType>
+                </fields>
+                <inputParameters>
+                    <name>width</name>
+                    <value>
+                        <stringValue>6</stringValue>
+                    </value>
+                </inputParameters>
+                <isRequired>false</isRequired>
+            </fields>
+            <isRequired>false</isRequired>
+            <regionContainerType>SectionWithHeader</regionContainerType>
+        </fields>
+        <fields>
+            <name>ExpectedFloatAmount</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(131, 123, 255); background-color: rgb(255, 255, 255); font-size: 18px;&quot;&gt;Expected: &lt;/strong&gt;&lt;span style=&quot;color: rgb(0, 0, 0); background-color: rgb(255, 255, 255); font-size: 18px;&quot;&gt;{!DefaultFloatAmountFormula}&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>SumOfActualFloat</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(229, 139, 110); background-color: rgb(255, 255, 255); font-size: 18px;&quot;&gt;Total:&lt;/strong&gt;&lt;strong style=&quot;color: rgb(0, 178, 173); background-color: rgb(255, 255, 255); font-size: 18px;&quot;&gt; &lt;/strong&gt;&lt;span style=&quot;font-size: 18px;&quot;&gt;{!ActualFloatFormula}&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <nextOrFinishButtonLabel>Next</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <description>The user will create their till shift record here.</description>
+        <name>Details_About_Till</name>
+        <label>Details About Till</label>
+        <locationX>336</locationX>
+        <locationY>2198</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Select_POS_Terminal</targetReference>
+        </connector>
+        <fields>
+            <name>EnterTillShiftInfo</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 178, 173); font-size: 20px; background-color: rgb(255, 255, 255);&quot;&gt;Select your Location&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Choose from one of the locations below, this sets up the till that you&apos;ll be selling out of.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Location</name>
+            <choiceReferences>LocationPicklistChoices</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Location</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+        <nextOrFinishButtonLabel>Next</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <description>The user will create their till shift record here.</description>
+        <name>Details_About_Till_One_Location</name>
+        <label>Details About Till One Location</label>
+        <locationX>72</locationX>
+        <locationY>2198</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Count_Start_of_Shift_Float</targetReference>
+        </connector>
+        <fields>
+            <name>Copy_1_of_EnterTillShiftInfo</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 178, 173); font-size: 20px; background-color: rgb(255, 255, 255);&quot;&gt;Select your POS Terminal&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;Choose from one of the POS terminals below, this sets up the till that you&apos;ll be selling out of.&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Copy_1_of_POS_Terminal</name>
+            <choiceReferences>POSTerminalPicklistChoicesOneLocation</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>POS Terminal</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+        <nextOrFinishButtonLabel>Next</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <description>Asks the user if they want to close their open till shift.</description>
+        <name>Does_User_Want_to_Close_Open_Till_Shifts</name>
+        <label>Does User Want to Close Open Till Shifts</label>
+        <locationX>182</locationX>
+        <locationY>1490</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Does_User_want_to_Close_Their_Open_Tills</targetReference>
+        </connector>
+        <fields>
+            <name>Close_Existing_Till</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;background-color: rgb(255, 255, 255); font-size: 20px; color: rgb(0, 178, 173);&quot;&gt;Close Open Till&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Looks like you have an existing till that is already open, would you like to close this out before you open a new one?&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Would_You_Like_to_Close_Your_Open_Tills</name>
+            <choiceReferences>Yes</choiceReferences>
+            <choiceReferences>No</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Would You Like to Close Your Open Tills?</fieldText>
+            <fieldType>RadioButtons</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+        <nextOrFinishButtonLabel>Next</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <name>Fault_Message</name>
+        <label>Fault Message</label>
+        <locationX>1392</locationX>
+        <locationY>1490</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>ErrorMessage</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;background-color: rgb(255, 255, 255); font-size: 20px; color: rgb(0, 178, 173);&quot;&gt;Oops! Looks like an error. &lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Reach out to your system administrator or Traction Rec support with this error message for help:&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;{!$Flow.FaultMessage}&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <description>Screen to finalize and submit the counted float amount.</description>
+        <name>Finalize_and_Submit</name>
+        <label>Finalize and Submit</label>
+        <locationX>336</locationX>
+        <locationY>2606</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Create_Till_Shift</targetReference>
+        </connector>
+        <fields>
+            <name>ReviewAndFinalizeHeader</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;background-color: rgb(255, 255, 255); font-size: 20px; color: rgb(0, 178, 173);&quot;&gt;Review &amp;amp; Confirm&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;Review the amount that you counted in the last step and compare it to the amount that should be in the till. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;You can go back if you need to recount or add any notes needed. &lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>DefaultFloatAmount</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;font-size: 14px; color: rgb(229, 139, 110);&quot;&gt;Expected Amount: &lt;/strong&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;{!DefaultFloatAmountFormula}&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>ActualFloatAmount</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;font-size: 14px; color: rgb(229, 139, 110); background-color: rgb(255, 255, 255);&quot;&gt;Actual Amount: &lt;/strong&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;{!ActualFloatFormula}&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Start_Time</name>
+            <dataType>DateTime</dataType>
+            <defaultValue>
+                <elementReference>$Flow.CurrentDateTime</elementReference>
+            </defaultValue>
+            <fieldText>Start Time</fieldText>
+            <fieldType>InputField</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>Notes</name>
+            <dataType>String</dataType>
+            <fieldText>Notes</fieldText>
+            <fieldType>InputField</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>false</isRequired>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <description>Screen that displays if the org has no till users.</description>
+        <name>No_Till_Users_Error</name>
+        <label>No Till Users Error</label>
+        <locationX>1128</locationX>
+        <locationY>674</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Welcome_Screen</targetReference>
+        </connector>
+        <fields>
+            <name>NoTillUsersErrorMessage</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 178, 173); font-size: 20px; background-color: rgb(255, 255, 255);&quot;&gt;Oops! Looks like an error. &lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Reach out to your system administrator or Traction Rec support with this error message for help:&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;font-size: 12px; color: rgb(0, 0, 0);&quot;&gt;Error: ﻿No user records with Till User = true were found. Please contact your admin to ensure your user record is created and that the Till User field = true.&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <nextOrFinishButtonLabel>Exit</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <description>Allows user to choose their POS Terminal based on the location they chose.</description>
+        <name>Select_POS_Terminal</name>
+        <label>Select POS Terminal</label>
+        <locationX>336</locationX>
+        <locationY>2306</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Count_Start_of_Shift_Float</targetReference>
+        </connector>
+        <fields>
+            <name>SelectPOSTerminalHeader</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 178, 173); font-size: 20px; background-color: rgb(255, 255, 255);&quot;&gt;Select your POS Terminal&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Choose from one of the POS terminals below, this sets up the till that you&apos;ll be selling out of.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>POS_Terminal_Picklist</name>
+            <choiceReferences>POSTerminalPicklistChoices</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>POS Terminal</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <inputsOnNextNavToAssocScrn>ResetValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <description>Screen where Front Desk user chooses their Till User record.</description>
+        <name>Select_Till_User</name>
+        <label>Select Till User</label>
+        <locationX>864</locationX>
+        <locationY>674</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Assign_Selected_User_to_Current_User_Variable</targetReference>
+        </connector>
+        <fields>
+            <name>PleaseChooseTillUser</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 178, 173); font-family: Poppins, Arial; font-size: 22px;&quot;&gt;Select your User&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: 10pt;&quot;&gt;To get started, choose your user from below.&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>TillUsers</name>
+            <dataTypeMappings>
+                <typeName>T</typeName>
+                <typeValue>User</typeValue>
+            </dataTypeMappings>
+            <extensionName>flowruntime:datatable</extensionName>
+            <fieldType>ComponentInstance</fieldType>
+            <inputParameters>
+                <name>label</name>
+                <value>
+                    <stringValue>Till Users</stringValue>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>selectionMode</name>
+                <value>
+                    <stringValue>SINGLE_SELECT</stringValue>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>minRowSelection</name>
+                <value>
+                    <numberValue>1.0</numberValue>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>shouldDisplayLabel</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>tableData</name>
+                <value>
+                    <elementReference>Get_Till_Users</elementReference>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>maxRowSelection</name>
+                <value>
+                    <numberValue>1.0</numberValue>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>columns</name>
+                <value>
+                    <stringValue>[{&quot;apiName&quot;:&quot;Name&quot;,&quot;guid&quot;:&quot;column-2aac&quot;,&quot;editable&quot;:false,&quot;hasCustomHeaderLabel&quot;:false,&quot;customHeaderLabel&quot;:&quot;&quot;,&quot;wrapText&quot;:true,&quot;order&quot;:0,&quot;label&quot;:&quot;Full Name&quot;,&quot;type&quot;:&quot;text&quot;}]</stringValue>
+                </value>
+            </inputParameters>
+            <inputParameters>
+                <name>isShowSearchBar</name>
+                <value>
+                    <booleanValue>true</booleanValue>
+                </value>
+            </inputParameters>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+            <storeOutputAutomatically>true</storeOutputAutomatically>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+    <screens>
+        <description>The first screen that asks if a Front Desk user wants to open or close a till.</description>
+        <name>Welcome_Screen</name>
+        <label>Welcome Screen</label>
+        <locationX>1128</locationX>
+        <locationY>1058</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>Is_User_Opening_or_Closing_a_Till</targetReference>
+        </connector>
+        <fields>
+            <name>WelcomeMessage</name>
+            <fieldText>&lt;p&gt;&lt;strong style=&quot;color: rgb(0, 178, 173); font-family: Poppins, Arial; font-size: 22px;&quot;&gt;Welcome to Cash In and Out! &lt;/strong&gt;&lt;span style=&quot;color: rgb(68, 68, 68); font-size: 22px; background-color: rgb(255, 255, 255);&quot;&gt;💸&lt;/span&gt;&lt;strong style=&quot;color: rgb(0, 246, 237); font-size: 22px; font-family: Poppins, Arial;&quot;&gt; &lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: 10pt;&quot;&gt;Use this process to easily cash in and cash out during your shift. &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot;color: rgb(0, 0, 0); font-size: 10pt;&quot;&gt;To get started, choose whether you will be opening a till (cashing in) or closing a till (cashing out).&lt;/span&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <fields>
+            <name>Open_or_Close_a_Till</name>
+            <choiceReferences>OpenaNewTill</choiceReferences>
+            <choiceReferences>CloseaTill</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Open or Close a Till</fieldText>
+            <fieldType>RadioButtons</fieldType>
+            <inputsOnNextNavToAssocScrn>UseStoredValues</inputsOnNextNavToAssocScrn>
+            <isRequired>true</isRequired>
+        </fields>
+        <nextOrFinishButtonLabel>Next</nextOrFinishButtonLabel>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
     <start>
-        <locationX>50</locationX>
+        <locationX>1002</locationX>
         <locationY>0</locationY>
         <connector>
-            <targetReference>Get_Accounts</targetReference>
+            <targetReference>Get_Locations</targetReference>
         </connector>
     </start>
-    <status>Draft</status>
+    <status>Active</status>
+    <subflows>
+        <description>Triggers the end of shift screen flow.</description>
+        <name>End_of_Shift</name>
+        <label>End of Shift</label>
+        <locationX>1656</locationX>
+        <locationY>1274</locationY>
+        <flowName>Till_Management_End_of_Shift</flowName>
+        <inputAssignments>
+            <name>CurrentUser</name>
+            <value>
+                <elementReference>CurrentUser</elementReference>
+            </value>
+        </inputAssignments>
+    </subflows>
+    <subflows>
+        <description>Opens end of shift flow to close open shift.</description>
+        <name>End_of_Shift_Close_Open_Till</name>
+        <label>End of Shift Close Open Till</label>
+        <locationX>50</locationX>
+        <locationY>1706</locationY>
+        <flowName>Till_Management_End_of_Shift</flowName>
+        <inputAssignments>
+            <name>CurrentUser</name>
+            <value>
+                <elementReference>CurrentUser</elementReference>
+            </value>
+        </inputAssignments>
+    </subflows>
     <variables>
-        <name>Accounts</name>
+        <description>Stores the Id of the current user who accessed the flow.</description>
+        <name>CurrentUser</name>
         <dataType>SObject</dataType>
-        <isCollection>true</isCollection>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+        <objectType>User</objectType>
+    </variables>
+    <variables>
+        <description>The number of location records.</description>
+        <name>NumberOfLocationRecords</name>
+        <dataType>Number</dataType>
+        <isCollection>false</isCollection>
         <isInput>false</isInput>
         <isOutput>false</isOutput>
-        <objectType>Account</objectType>
+        <scale>0</scale>
+        <value>
+            <numberValue>0.0</numberValue>
+        </value>
+    </variables>
+    <variables>
+        <description>Till Shift record that is being opened.</description>
+        <name>TillShift</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Till_Shift__c</objectType>
     </variables>
 </Flow>

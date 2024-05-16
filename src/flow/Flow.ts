@@ -1,5 +1,5 @@
 // =====================================================================================================================
-// Base Flow Types
+// Base Flow Types See https://developer.salesforce.com/docs/atlas.en-us.api_meta.meta/api_meta/meta_visual_workflow.htm
 // =====================================================================================================================
 
 export type Metadata = {
@@ -8,8 +8,10 @@ export type Metadata = {
 
 export type Flow = Metadata & {
   actionCalls?: FlowActionCall[];
+  apexPluginCalls?: FlowApexPluginCall[];
   apiVersion?: number;
   assignments?: FlowAssignment[];
+  collectionProcessors?: FlowCollectionProcessor[];
   description?: string;
   interviewLabel?: string;
   isAdditionalPermissionRequiredToRun?: boolean;
@@ -17,7 +19,9 @@ export type Flow = Metadata & {
   label?: string;
   loops?: FlowLoop[];
   migratedFromWorkflowRuleName?: string;
+  orchestratedStages?: FlowOrchestratedStage[];
   screens?: FlowScreen[];
+  subflows?: FlowSubflow[];
   decisions?: FlowDecision[];
   recordLookups?: FlowRecordLookup[];
   recordRollbacks?: FlowRecordRollback[];
@@ -51,13 +55,37 @@ export type FlowNode = FlowElement & {
 // Connector Flow Types
 // =====================================================================================================================
 
+export type FlowSubflow = FlowNode & {
+  connector: FlowConnector;
+  flowName: string;
+  storeOutputAutomatically?: boolean;
+};
+export function isFlowSubflow(obj: unknown): obj is FlowSubflow {
+  return typeof obj === 'object' && obj !== null && 'flowName' in obj;
+}
+
+export type FlowCollectionProcessor = FlowNode & {
+  connector: FlowConnector;
+};
+
+export type FlowApexPluginCall = FlowNode & {
+  apexClass: string;
+  connector: FlowConnector;
+  faultConnector: FlowConnector;
+};
+
+export type FlowOrchestratedStage = FlowNode & {
+  connector: FlowConnector;
+  faultConnector: FlowConnector;
+};
+
 export type FlowDecision = FlowNode & {
   defaultConnector: FlowConnector;
   defaultConnectorLabel: string;
   rules: FlowRule[];
 };
 export function isFlowDecision(obj: unknown): obj is FlowDecision {
-  return typeof obj === 'object' && obj !== null && 'rules' in obj && 'defaultConnector' in obj;
+  return typeof obj === 'object' && obj !== null && 'rules' in obj && 'defaultConnectorLabel' in obj;
 }
 
 export type FlowRule = FlowElement & {

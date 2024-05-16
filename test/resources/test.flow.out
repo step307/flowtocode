@@ -3,6 +3,7 @@ SCREEN: Select_Items_Screen
 LOOP: Action_Loop
   ASSIGNMENT: Create_Request
   ASSIGNMENT: Add_Request
+  END LOOP: Action_Loop
 try:
   APEX CALL: DoBulkAction
   SCREEN: Confirmation_Screen

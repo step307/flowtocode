@@ -1,7 +1,10 @@
 Get_Accounts
 LOOP: Account_Loop
-  IF: If Account Number starts with 1
-    Delete_Account
-  ELSE:
-    Update_Account
+  DECISION: Account_Decision
+    CASE: If Account Number starts with 1
+      Delete_Account
+      END LOOP: Account_Loop
+    DEFAULT:
+      Update_Account
+      END LOOP: Account_Loop
 APEX CALL: Do_Bulk_Action

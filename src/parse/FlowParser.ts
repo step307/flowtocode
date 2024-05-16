@@ -50,9 +50,11 @@ export class ParseTreeNode {
 export class FlowParser {
   private flowElementByName: Map<string, Flow.FlowBaseElement>;
   private flowLoopStack: Flow.FlowLoop[];
+  private elementParseCount: Map<string, number>;
 
   public constructor() {
     this.flowElementByName = new Map<string, Flow.FlowBaseElement>();
+    this.elementParseCount = new Map<string, number>();
     this.flowLoopStack = [];
   }
 
@@ -87,7 +89,13 @@ export class FlowParser {
   }
 
   private parseElement(parentNode: ParseTreeNode, element: Flow.FlowElement): void {
+    this.elementParseCount.set(element.name, (this.elementParseCount.get(element.name) ?? 0) + 1);
+
     if (this.flowLoopStack.includes(element as Flow.FlowLoop)) {
+      parentNode.addChild(new ParseTreeNode('END LOOP: ' + element.name, element));
+      return;
+    } else if ((this.elementParseCount.get(element.name) ?? 0) > 1) {
+      parentNode.addChild(new ParseTreeNode('ALREADY OUTPUT: ' + element.name, element));
       return;
     } else if (Flow.isFlowActionCall(element)) {
       this.parseActionCallElement(parentNode, element);
@@ -102,6 +110,9 @@ export class FlowParser {
     } else if (Flow.isFlowAssignment(element)) {
       parentNode.addChild(new ParseTreeNode('ASSIGNMENT: ' + element.name, element));
       this.parseConnector(parentNode, element);
+    } else if (Flow.isFlowSubflow(element)) {
+      parentNode.addChild(new ParseTreeNode('SUBFLOW: ' + element.name, element));
+      this.parseConnector(parentNode, element);
     } else {
       parentNode.addChild(new ParseTreeNode(element.name, element));
       this.parseConnector(parentNode, element);
@@ -115,6 +126,8 @@ export class FlowParser {
       // try references fault connector to avoid infinite recursion on above check
       const tryNode = new ParseTreeNode('try:', faultConnectorElement);
       parentNode.addChild(tryNode);
+      // reduce parse count to allow fault connector to be parsed
+      this.elementParseCount.set(actionElement.name, (this.elementParseCount.get(actionElement.name) ?? 1) - 1);
       this.parseElement(tryNode, actionElement);
 
       const catchNode = new ParseTreeNode('except:');
@@ -145,16 +158,23 @@ export class FlowParser {
   }
 
   private parseDecisionElement(parentNode: ParseTreeNode, flowElement: Flow.FlowDecision): void {
+    const decision = new ParseTreeNode('DECISION: ' + flowElement.name, flowElement);
+    parentNode.addChild(decision);
     for (const ruleElement of flowElement.rules) {
-      this.parseRuleElement(parentNode, ruleElement);
+      this.parseRuleElement(decision, ruleElement);
     }
-    const elseNode = new ParseTreeNode('ELSE:', this.getElementFromConnector(flowElement.defaultConnector));
-    parentNode.addChild(elseNode);
-    this.parseElement(elseNode, this.getElementFromConnector(flowElement.defaultConnector));
+    if (flowElement.defaultConnector == null) {
+      const elseNode = new ParseTreeNode('END FLOW');
+      decision.addChild(elseNode);
+    } else {
+      const elseNode = new ParseTreeNode('DEFAULT:', this.getElementFromConnector(flowElement.defaultConnector));
+      decision.addChild(elseNode);
+      this.parseElement(elseNode, this.getElementFromConnector(flowElement.defaultConnector));
+    }
   }
 
   private parseRuleElement(parentNode: ParseTreeNode, ruleElement: Flow.FlowRule): void {
-    const ruleNode = new ParseTreeNode('IF: ' + ruleElement.label, ruleElement);
+    const ruleNode = new ParseTreeNode('CASE: ' + ruleElement.label, ruleElement);
     parentNode.addChild(ruleNode);
     this.parseConnector(ruleNode, ruleElement);
   }
@@ -200,6 +220,12 @@ export class FlowParser {
     if (flow.actionCalls) {
       addToMap(flow.actionCalls);
     }
+    if (flow.apexPluginCalls) {
+      addToMap(flow.apexPluginCalls);
+    }
+    if (flow.collectionProcessors) {
+      addToMap(flow.collectionProcessors);
+    }
     if (flow.screens) {
       addToMap(flow.screens);
     }
@@ -235,6 +261,9 @@ export class FlowParser {
     }
     if (flow.recordDeletes) {
       addToMap(flow.recordDeletes);
+    }
+    if (flow.subflows) {
+      addToMap(flow.subflows);
     }
 
     return apiToFlowNode;
