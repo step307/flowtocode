@@ -19,12 +19,12 @@ describe('ftc generate code', () => {
     await FtcGenerateCode.run(['--file', './test/resources/test.flow-meta.xml']);
     const expected: string = await fs.readFile('./test/resources/test.flow.expected', 'utf8');
     const output: string = await fs.readFile('./test/resources/test.ftc', 'utf8');
-    expect(output).to.equal(expected);
+    expect(output.replace(/\r/g, '')).to.equal(expected);
   });
   it('runs on decision flow', async () => {
     await FtcGenerateCode.run(['--file', './test/resources/test_decision.flow-meta.xml']);
     const expected: string = await fs.readFile('./test/resources/test_decision.flow.expected', 'utf8');
     const output: string = await fs.readFile('./test/resources/test_decision.ftc', 'utf8');
-    expect(output).to.equal(expected);
+    expect(output.replace(/\r/g, '')).to.equal(expected);
   });
 });
