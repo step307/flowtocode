@@ -10,6 +10,10 @@ Create pseudocode for the given flow & write it to standard output.
 
 The flow file to convert to pseudocode.
 
+# flags.output.summary
+
+The output directory for the pseudocode.
+
 # examples
 
 - <%= config.bin %> <%= command.id %> -f ./test.flow
