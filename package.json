@@ -7,12 +7,12 @@
     "@salesforce/core": "^7.3.1",
     "@salesforce/sf-plugins-core": "^9.1.1",
     "@types/xml2js": "^0.4.14",
-    "husky": "^9.1.5",
     "lodash": "4.17.21",
     "wireit": "^0.14.8",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "husky": "^9.1.5",
     "@oclif/dev-cli": "^1.26.10",
     "@oclif/plugin-command-snapshot": "^5.2.18",
     "@salesforce/cli-plugins-testkit": "^5.3.19",
@@ -73,7 +73,7 @@
     "docs": "sf-docs",
     "format": "wireit",
     "lint": "wireit",
-    "postinstall": "yarn husky install",
+    "postinstall": "if [ \"$NODE_ENV\" != \"production\" ]; then yarn husky; fi",
     "postpack": "shx rm -f oclif.manifest.json oclif.lock",
     "prepack": "sf-prepack",
     "test": "wireit",
