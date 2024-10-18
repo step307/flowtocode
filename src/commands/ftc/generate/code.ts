@@ -27,19 +27,35 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
       char: 'f',
       required: true,
     }),
+    output: Flags.string({
+      summary: messages.getMessage('flags.output.summary'),
+      char: 'd',
+      required: false,
+    }),
   };
+
+  private static getOutputPath(filepath: string, outputDir?: string): string {
+    if (outputDir) {
+      const filename = filepath.split('/').pop()?.replace('.flow-meta.xml', '.ftc');
+      return `${outputDir}/${filename}`;
+    }
+    return filepath.replace('.flow-meta.xml', '.ftc');
+  }
 
   public async run(): Promise<FtcGenerateCodeResult> {
     const { flags } = await this.parse(FtcGenerateCode);
 
-    const filename: string = flags.file;
-    const fileContent: string = await fs.readFile(filename, 'utf-8');
+    const filepath: string = flags.file;
+    const fileContent: string = await fs.readFile(filepath, 'utf-8');
     const parser: xml2js.Parser = new xml2js.Parser({ explicitArray: false });
     const flow: Flow = ((await parser.parseStringPromise(fileContent)) as ParsedXml).Flow;
     const parseTree: string = new FlowParser().toPseudoCode(flow);
     this.log(parseTree);
+    const outputPath: string = FtcGenerateCode.getOutputPath(filepath, flags.output);
+    await fs.writeFile(outputPath, parseTree, 'utf-8');
+    this.log(`Output written to ${outputPath}`);
     return {
-      path: '/Users/jdr/projects/flowtocode/src/commands/ftc/generate/code.ts',
+      path: outputPath,
     };
   }
 }
