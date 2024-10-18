@@ -1,7 +1,7 @@
 {
   "name": "flowtocode",
   "description": "covert salesforce flows into pseudocode",
-  "version": "1.0.2",
+  "version": "1.1.2",
   "dependencies": {
     "@oclif/core": "^3.26.2",
     "@salesforce/core": "^7.3.1",
@@ -12,12 +12,12 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
-    "husky": "^9.1.5",
     "@oclif/dev-cli": "^1.26.10",
     "@oclif/plugin-command-snapshot": "^5.2.18",
     "@salesforce/cli-plugins-testkit": "^5.3.19",
     "@salesforce/dev-scripts": "^9.0.0",
     "eslint-plugin-sf-plugin": "^1.20.9",
+    "husky": "^9.1.5",
     "oclif": "^4.15.6",
     "shx": "0.3.4",
     "ts-node": "^10.9.2",
