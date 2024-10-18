@@ -36,7 +36,7 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
 
   private static getOutputPath(filepath: string, outputDir?: string): string {
     if (outputDir) {
-      const filename = filepath.split('/').pop()?.replace('.flow-meta.xml', '.ftc');
+      const filename = filepath.split('/').pop()?.replace('.flow-meta.xml', '.ftc') ?? 'flow.ftc';
       return `${outputDir}/${filename}`;
     }
     return filepath.replace('.flow-meta.xml', '.ftc');
