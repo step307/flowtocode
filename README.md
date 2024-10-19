@@ -108,7 +108,8 @@ USAGE
   $ sf ftc generate code -f <value> [--json] [--flags-dir <value>] [-d <value>]
 
 FLAGS
-  -d, --output=<value>  The output directory for the pseudocode.
+  -d, --output=<value>  The output directory for the pseudocode. If not provided, the pseudocode will be written to the
+                        same directory as the flow file.
   -f, --file=<value>    (required) The flow file to convert to pseudocode.
 
 GLOBAL FLAGS

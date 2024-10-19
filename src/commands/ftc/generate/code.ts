@@ -50,7 +50,6 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
     const parser: xml2js.Parser = new xml2js.Parser({ explicitArray: false });
     const flow: Flow = ((await parser.parseStringPromise(fileContent)) as ParsedXml).Flow;
     const parseTree: string = new FlowParser().toPseudoCode(flow);
-    this.log(parseTree);
     const outputPath: string = FtcGenerateCode.getOutputPath(filepath, flags.output);
     await fs.writeFile(outputPath, parseTree, 'utf-8');
     this.log(`Output written to ${outputPath}`);

@@ -12,7 +12,7 @@ The flow file to convert to pseudocode.
 
 # flags.output.summary
 
-The output directory for the pseudocode.
+The output directory for the pseudocode. If not provided, the pseudocode will be written to the same directory as the flow file.
 
 # examples
 
