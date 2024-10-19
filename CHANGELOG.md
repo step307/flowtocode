@@ -1,4 +1,10 @@
-# 1.2.0 (2024-10-18)
+# [1.6.0](https://github.com/Traction-Rec/flowtocode/compare/1.2.0...1.6.0) (2024-10-19)
+
+### Features
+
+- **ui:** only write pseudocode to file ([1de2be8](https://github.com/Traction-Rec/flowtocode/commit/1de2be8f5e8c50f4412a3adeb0e1a6723228a017))
+
+# [1.2.0](https://github.com/Traction-Rec/flowtocode/compare/fc2140a2973ab3c922fc3565800a2b9291ad422c...1.2.0) (2024-10-18)
 
 ### Bug Fixes
 
