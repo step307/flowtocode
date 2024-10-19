@@ -77,15 +77,29 @@ export class FlowParser {
   public parse(flow: Flow.Flow): ParseTreeNode {
     this.flowElementByName = this.getFlowElementByName(flow);
 
-    const startElement: Flow.FlowElement = this.getElementFromConnector(flow.start.connector);
+    const root = new ParseTreeNode();
+    if (flow.start.connector) {
+      const startElement: Flow.FlowElement = this.getElementFromConnector(flow.start.connector);
 
-    if (startElement) {
-      const root = new ParseTreeNode();
-      this.parseElement(root, startElement);
-      return root;
-    } else {
-      throw new Error('No start element found');
+      if (startElement) {
+        this.parseElement(root, startElement);
+      } else {
+        throw new Error('No start element found');
+      }
     }
+    if (flow.start.scheduledPaths) {
+      for (const scheduledPath of flow.start.scheduledPaths) {
+        const scheduledElement: Flow.FlowElement = this.getElementFromConnector(scheduledPath.connector);
+
+        if (scheduledElement) {
+          this.parseElement(root, scheduledElement);
+        } else {
+          throw new Error('No scheduled element found');
+        }
+      }
+    }
+
+    return root;
   }
 
   private parseElement(parentNode: ParseTreeNode, element: Flow.FlowElement): void {
@@ -147,11 +161,15 @@ export class FlowParser {
   private parseLoopElement(parentNode: ParseTreeNode, flowElement: Flow.FlowLoop): void {
     const loopNode = new ParseTreeNode('LOOP: ' + flowElement.name, flowElement);
     parentNode.addChild(loopNode);
-    const nextValueElement = this.getElementFromConnector(flowElement.nextValueConnector);
+    const nextValueElement =
+      flowElement.nextValueConnector == null ? null : this.getElementFromConnector(flowElement.nextValueConnector);
     if (nextValueElement) {
       this.parseElement(loopNode, nextValueElement);
     }
-    const noMoreValuesElement = this.getElementFromConnector(flowElement.noMoreValuesConnector);
+    const noMoreValuesElement =
+      flowElement.noMoreValuesConnector == null
+        ? null
+        : this.getElementFromConnector(flowElement.noMoreValuesConnector);
     if (noMoreValuesElement) {
       this.parseElement(parentNode, noMoreValuesElement);
     }
@@ -202,6 +220,7 @@ export class FlowParser {
   }
 
   // eslint-disable-next-line class-methods-use-this
+  // eslint-disable-next-line complexity
   private getFlowElementByName(flow: Flow.Flow): Map<string, Flow.FlowBaseElement> {
     const apiToFlowNode = new Map<string, Flow.FlowBaseElement>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-function-return-type
@@ -225,6 +244,9 @@ export class FlowParser {
     }
     if (flow.collectionProcessors) {
       addToMap(flow.collectionProcessors);
+    }
+    if (flow.customErrors) {
+      addToMap(flow.customErrors);
     }
     if (flow.screens) {
       addToMap(flow.screens);
@@ -262,8 +284,22 @@ export class FlowParser {
     if (flow.recordDeletes) {
       addToMap(flow.recordDeletes);
     }
+    if (flow.scheduledPaths) {
+      if (!Array.isArray(flow.scheduledPaths)) {
+        flow.scheduledPaths = [flow.scheduledPaths];
+      }
+      addToMap(flow.scheduledPaths);
+    }
     if (flow.subflows) {
       addToMap(flow.subflows);
+    }
+    if (flow.transforms) {
+      addToMap(flow.transforms);
+    }
+    if (flow.start.scheduledPaths) {
+      if (!Array.isArray(flow.start.scheduledPaths)) {
+        flow.start.scheduledPaths = [flow.start.scheduledPaths];
+      }
     }
 
     return apiToFlowNode;

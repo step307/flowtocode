@@ -12,6 +12,7 @@ export type Flow = Metadata & {
   apiVersion?: number;
   assignments?: FlowAssignment[];
   collectionProcessors?: FlowCollectionProcessor[];
+  customErrors?: FlowElement[];
   description?: string;
   interviewLabel?: string;
   isAdditionalPermissionRequiredToRun?: boolean;
@@ -28,11 +29,13 @@ export type Flow = Metadata & {
   recordCreates?: FlowRecordCreate[];
   recordUpdates?: FlowRecordUpdate[];
   recordDeletes?: FlowRecordDelete[];
+  scheduledPaths?: FlowScheduledPath[];
   segment?: string;
   start: FlowStart;
   startElementReference?: string;
   steps?: FlowStep[];
   timeZoneSidKey?: string;
+  transforms?: FlowTransform[];
   triggerOrder?: number;
 };
 export function isFlow(obj: unknown): obj is Flow {
@@ -126,7 +129,8 @@ export function isFlowScreen(obj: unknown): obj is FlowScreen {
 }
 
 export type FlowStart = FlowNode & {
-  connector: FlowConnector;
+  connector?: FlowConnector;
+  scheduledPaths?: FlowScheduledPath[];
   flowRunAsUser: string;
 };
 
@@ -202,6 +206,27 @@ export type FlowElementReferenceOrValue = {
   setupReferenceType?: string;
   sobjectValue?: string;
   stringValue?: string;
+};
+
+export type FlowScheduledPath = {
+  connector: FlowConnector;
+};
+
+export type FlowTransform = {
+  apexClass?: string;
+  connector?: FlowConnector[];
+  dataType: FlowDataType;
+  isCollection?: boolean;
+  objectType?: string;
+  scale?: number;
+  storeOutputAutomatically?: boolean;
+  transformValues?: FlowTransformValue[];
+};
+
+export type FlowTransformValue = {
+  leftValueReference: string;
+  operator: FlowAssignmentOperator;
+  rightValue: FlowElementReferenceOrValue;
 };
 
 // =====================================================================================================================
