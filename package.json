@@ -1,7 +1,7 @@
 {
   "name": "flowtocode",
   "description": "covert salesforce flows into pseudocode",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "dependencies": {
     "@oclif/core": "^3.26.2",
     "@salesforce/core": "^7.3.1",
@@ -73,7 +73,6 @@
     "docs": "sf-docs",
     "format": "wireit",
     "lint": "wireit",
-    "postinstall": "if [ \"$NODE_ENV\" != \"production\" ]; then yarn husky; fi",
     "postpack": "shx rm -f oclif.manifest.json oclif.lock",
     "prepack": "sf-prepack",
     "test": "wireit",
