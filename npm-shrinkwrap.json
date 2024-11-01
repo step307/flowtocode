@@ -1,13 +1,12 @@
 {
   "name": "flowtocode",
-  "version": "1.5.2",
+  "version": "1.5.4",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "flowtocode",
-      "version": "1.5.2",
-      "hasInstallScript": true,
+      "version": "1.5.4",
       "license": "BSD-3-Clause",
       "dependencies": {
         "@oclif/core": "^3.26.2",
