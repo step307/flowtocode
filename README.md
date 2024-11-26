@@ -11,7 +11,7 @@ Convert Salesforce Flows to pseudocode! Add the pseudocode to source control for
 Turn [this flow metadata file](https://github.com/Traction-Rec/flowtocode/blob/main/test/resources/test.flow-meta.xml) into human-reviewable pseudocode.
 
 `sf plugins install flowtocode`
-`sf ftc generate code -f test.flow-meta.xml`
+`sf ftc generate code -f ./test.flow-meta.xml` creates file `./test.ftc` with contents:
 
     ACTION CALL: Execute_Apex_Query
     SCREEN: Select_Items_Screen
@@ -23,6 +23,15 @@ Turn [this flow metadata file](https://github.com/Traction-Rec/flowtocode/blob/m
       SCREEN: Confirmation_Screen
     except:
       SCREEN: Fault_Screen
+
+## .forceignore
+
+By default the tool creates a `.ftc` pseudocode file in the same directory as the target flow. 
+
+To ensure this doesn't conflict with SF cli functionality, add the following like to the `.forceignore` file:
+
+    # ignore automatically-generated flow pseudocode documentation
+    **/*.ftc
 
 ## Husky hook
 
