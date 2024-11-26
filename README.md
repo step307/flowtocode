@@ -6,6 +6,46 @@
 
 Convert Salesforce Flows to pseudocode! Add the pseudocode to source control for more human-friendly diffs.
 
+## Example
+
+Turn [this flow metadata file](https://github.com/Traction-Rec/flowtocode/blob/main/test/resources/test.flow-meta.xml) into human-reviewable pseudocode.
+
+`sf plugins install flowtocode`
+`sf ftc generate code -f test.flow-meta.xml`
+
+    ACTION CALL: Execute_Apex_Query
+    SCREEN: Select_Items_Screen
+    LOOP: Action_Loop
+      ASSIGNMENT: Create_Request
+      ASSIGNMENT: Add_Request
+    try:
+      ACTION CALL: DoBulkAction
+      SCREEN: Confirmation_Screen
+    except:
+      SCREEN: Fault_Screen
+
+## Husky hook
+
+To automatically run flow to code on commit, you can add this to your husky pre-commit script:
+
+    flow_files=$(git diff --cached --name-only | grep '\.flow-meta\.xml$' | xargs -I {} realpath "{}")
+    if [ -n "$flow_files" ]; then
+        echo "Generating flow to code!"
+    
+        # Check if the sf ftc plugin is installed
+        if ! sf plugins --core | grep -q flowtocode; then
+            echo "sf ftc plugin is not installed. Installing now..."
+            echo "y" | sf plugins install flowtocode || echo "ftc install failed" && true
+        fi
+    
+        # Iterate over each file and run the command
+        for file in $flow_files; do
+            sf ftc generate code -f "$file" || echo "ftc generation failed on $file" && true
+            ftc_file="${file%.flow-meta.xml}.ftc"
+            git add "$ftc_file" || echo "git staging ftc file failed on $file" && true  
+        done
+    fi
+
 ## Learn about `sf` plugins
 
 Salesforce CLI plugins are based on the [oclif plugin framework](<(https://oclif.io/docs/introduction.html)>). Read the [plugin developer guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_plugins.meta/sfdx_cli_plugins/cli_plugins_architecture_sf_cli.htm) to learn about Salesforce CLI plugin development.
