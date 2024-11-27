@@ -1,6 +1,6 @@
 # flowtocode
 
-[![NPM](https://img.shields.io/npm/v/flowtocode.svg?label=flowtocode)](https://www.npmjs.com/package/flowtocode) [![Downloads/week](https://img.shields.io/npm/dw/flowtocode.svg)](https://npmjs.org/package/flowtocode) [![License](https://img.shields.io/badge/License-BSD%203--Clause-brightgreen.svg)](https://raw.githubusercontent.com/salesforcecli/flowtocode/main/LICENSE.txt)
+[![NPM](https://img.shields.io/npm/v/flowtocode.svg?label=flowtocode)](https://www.npmjs.com/package/flowtocode) [![Downloads/week](https://img.shields.io/npm/dw/flowtocode.svg)](https://npmjs.org/package/flowtocode) [![License](https://img.shields.io/badge/License-MIT%203--Clause-brightgreen.svg)](https://raw.githubusercontent.com/salesforcecli/flowtocode/main/LICENSE.txt)
 
 ## Convert Salesforce Flows To Pseudocode
 
