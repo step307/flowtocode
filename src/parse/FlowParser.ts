@@ -2,7 +2,8 @@
 import * as Flow from '../flow/Flow.js';
 
 export interface FormatterInterface {
-  formatAssignement(element: Flow.FlowAssignment): string;
+  formatAssignment(element: Flow.FlowAssignment): string;
+  formatSubflow(element: Flow.FlowSubflow): string;
 }
 
 export class ParseTreeNode {
@@ -126,13 +127,10 @@ export class FlowParser {
     } else if (Flow.isFlowDecision(element)) {
       this.parseDecisionElement(parentNode, element);
     } else if (Flow.isFlowAssignment(element)) {
-      parentNode.addChild(new ParseTreeNode(
-        this.formatter.formatAssignement(element),
-        element
-      ));
+      parentNode.addChild(new ParseTreeNode(this.formatter.formatAssignment(element),element));
       this.parseConnector(parentNode, element);
     } else if (Flow.isFlowSubflow(element)) {
-      parentNode.addChild(new ParseTreeNode('SUBFLOW: ' + element.name, element));
+      parentNode.addChild(new ParseTreeNode(this.formatter.formatSubflow(element), element));
       this.parseConnector(parentNode, element);
     } else {
       parentNode.addChild(new ParseTreeNode(element.name, element));
