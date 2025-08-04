@@ -4,6 +4,7 @@ import { Messages } from '@salesforce/core';
 import * as xml2js from 'xml2js';
 import { Flow } from '../../../flow/Flow.js';
 import { FlowParser } from '../../../parse/FlowParser.js';
+import { DefaultFtcFormatter } from '../../../format/DefaultFtcFormatter.js';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('flowtocode', 'ftc.generate.code');
@@ -44,12 +45,12 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
 
   public async run(): Promise<FtcGenerateCodeResult> {
     const { flags } = await this.parse(FtcGenerateCode);
-
+    const outputFormatter = new DefaultFtcFormatter();
     const filepath: string = flags.file;
     const fileContent: string = await fs.readFile(filepath, 'utf-8');
     const parser: xml2js.Parser = new xml2js.Parser({ explicitArray: false });
     const flow: Flow = ((await parser.parseStringPromise(fileContent)) as ParsedXml).Flow;
-    const parseTree: string = new FlowParser().toPseudoCode(flow);
+    const parseTree: string = new FlowParser(outputFormatter).toPseudoCode(flow);
     const outputPath: string = FtcGenerateCode.getOutputPath(filepath, flags.output);
     await fs.writeFile(outputPath, parseTree, 'utf-8');
     this.log(`Output written to ${outputPath}`);
