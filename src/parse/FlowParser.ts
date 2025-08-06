@@ -58,22 +58,6 @@ export class FlowParser {
     this.flowLoopStack = [];
   }
 
-  public toPseudoCode(flow: Flow.Flow): string {
-    const root = this.parse(flow);
-    return this.convertToPseudocode(root);
-  }
-
-  public convertToPseudocode(node: ParseTreeNode, tabLevel: number = -1): string {
-    let result = '';
-    if (node.getStatement()) {
-      result += `${'  '.repeat(tabLevel)}${node.getStatement()}\n`;
-    }
-    for (const child of node.getChildren()) {
-      result += this.convertToPseudocode(child, tabLevel + 1);
-    }
-    return result;
-  }
-
   public parse(flow: Flow.Flow): ParseTreeNode {
     this.flowElementByName = this.getFlowElementByName(flow);
 
