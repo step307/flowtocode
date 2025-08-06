@@ -1,14 +1,6 @@
 /* eslint-disable no-param-reassign */
 import * as Flow from '../flow/Flow.js';
 
-export interface FormatterInterface {
-  formatAssignment(element: Flow.FlowAssignment): string;
-  formatSubflow(element: Flow.FlowSubflow): string;
-  formatDecision(element: Flow.FlowDecision): string;
-  formatRule(element: Flow.FlowRule): string;
-  formatActionCall(element: Flow.FlowActionCall): string;
-}
-
 export class ParseTreeNode {
   private statement: string;
   private parent?: ParseTreeNode;
@@ -60,7 +52,7 @@ export class FlowParser {
   private flowLoopStack: Flow.FlowLoop[];
   private elementParseCount: Map<string, number>;
 
-  public constructor(private formatter: FormatterInterface) {
+  public constructor() {
     this.flowElementByName = new Map<string, Flow.FlowBaseElement>();
     this.elementParseCount = new Map<string, number>();
     this.flowLoopStack = [];
@@ -130,10 +122,10 @@ export class FlowParser {
     } else if (Flow.isFlowDecision(element)) {
       this.parseDecisionElement(parentNode, element);
     } else if (Flow.isFlowAssignment(element)) {
-      parentNode.addChild(new ParseTreeNode(this.formatter.formatAssignment(element),element));
+      parentNode.addChild(new ParseTreeNode('ASSIGNMENT: ' + element.name, element));
       this.parseConnector(parentNode, element);
     } else if (Flow.isFlowSubflow(element)) {
-      parentNode.addChild(new ParseTreeNode(this.formatter.formatSubflow(element), element));
+      parentNode.addChild(new ParseTreeNode('SUBFLOW: ' + element.name, element));
       this.parseConnector(parentNode, element);
     } else {
       parentNode.addChild(new ParseTreeNode(element.name, element));
@@ -156,7 +148,7 @@ export class FlowParser {
       parentNode.addChild(catchNode);
       this.parseElement(catchNode, faultConnectorElement);
     } else {
-      parentNode.addChild(new ParseTreeNode(this.formatter.formatActionCall(actionElement), actionElement));
+      parentNode.addChild(new ParseTreeNode('ACTION CALL: ' + actionElement.name, actionElement));
       this.parseConnector(parentNode, actionElement);
     }
   }
@@ -184,7 +176,7 @@ export class FlowParser {
   }
 
   private parseDecisionElement(parentNode: ParseTreeNode, flowElement: Flow.FlowDecision): void {
-    const decision = new ParseTreeNode(this.formatter.formatDecision(flowElement), flowElement);
+    const decision = new ParseTreeNode('DECISION: ' + flowElement.name, flowElement);
     parentNode.addChild(decision);
     for (const ruleElement of flowElement.rules) {
       this.parseRuleElement(decision, ruleElement);
@@ -200,7 +192,7 @@ export class FlowParser {
   }
 
   private parseRuleElement(parentNode: ParseTreeNode, ruleElement: Flow.FlowRule): void {
-    const ruleNode = new ParseTreeNode(this.formatter.formatRule(ruleElement), ruleElement);
+    const ruleNode = new ParseTreeNode('CASE: ' + ruleElement.label, ruleElement);
     parentNode.addChild(ruleNode);
     this.parseConnector(ruleNode, ruleElement);
   }
