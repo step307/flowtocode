@@ -5,7 +5,6 @@ import * as xml2js from 'xml2js';
 import { Flow } from '../../../flow/Flow.js';
 import { FlowParser, ParseTreeNode } from '../../../parse/FlowParser.js';
 import { DefaultFtcFormatter } from '../../../format/DefaultFtcFormatter.js';
-// import { DefaultFtcFormatter } from '../../../format/DefaultFtcFormatter.js';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('flowtocode', 'ftc.generate.code');
@@ -56,8 +55,6 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
     const flow: Flow = ((await parser.parseStringPromise(fileContent)) as ParsedXml).Flow;
     const flowParser: FlowParser = new FlowParser();
     const formatter: FormatterInterface = new DefaultFtcFormatter();
-
-
     const treeNode: ParseTreeNode = flowParser.parse(flow);
     const parseTree: string = formatter.convertToPseudocode(treeNode);
     const outputPath: string = FtcGenerateCode.getOutputPath(filepath, flags.output);

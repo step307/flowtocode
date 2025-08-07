@@ -33,8 +33,8 @@ export class ParseTreeNode {
     return this.type;
   }
 
-  public setStatement(statement: NodeType): void {
-    this.type = statement;
+  public setType(type: NodeType): void {
+    this.type = type;
   }
 
   public getParent(): ParseTreeNode | undefined {
