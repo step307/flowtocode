@@ -15,25 +15,59 @@ export class DefaultFtcFormatter implements FormatterInterface {
   }
 
   private formatNodeStatement(node: ParseTreeNode): string {
-    const flowElement = node.getFlowElement();
+    const flowElement = node.getFlowElement() as Flow.FlowElement;
 
-    if (flowElement === undefined) {
-      return node.getStatement() ? node.getStatement() : ''; // TODO: remove this fallback
+    switch (node.getStatement()) { // Any better way to identify "special" nodes?
+      case 'try':
+        return this.formatTryStatement();
+      case 'DEFAULT':
+        return this.formatDefaultOutcome();
+      case 'except':
+        return this.formatExceptStatement();
     }
 
-    if (Flow.isFlowActionCall(flowElement)) {
-      return this.formatActionCall(flowElement);
-    } else if (Flow.isFlowDecision(flowElement)) {
-      return this.formatDecision(flowElement);
-    } else if (Flow.isFlowSubflow(flowElement)) {
-      return this.formatSubflow(flowElement);
-    } else if (Flow.isFlowRule(flowElement)) {
-      return this.formatRule(flowElement);
-    } else if (Flow.isFlowAssignment(flowElement)) {
-      return this.formatAssignment(flowElement);
+    if (!flowElement) {
+      return 'No flow element for the node';
     }
 
-    return node.getStatement() ? node.getStatement() : ''; // TODO: remove this fallback
+    switch (true) {
+      case Flow.isFlowActionCall(flowElement):
+        return this.formatActionCall(flowElement);
+      case Flow.isFlowDecision(flowElement):
+        return this.formatDecision(flowElement);
+      case Flow.isFlowSubflow(flowElement):
+        return this.formatSubflow(flowElement);
+      case Flow.isFlowRule(flowElement):
+        return this.formatRule(flowElement);
+      case Flow.isFlowAssignment(flowElement):
+        return this.formatAssignment(flowElement);
+      case Flow.isFlowScreen(flowElement):
+        return this.formatFlowScreen(flowElement);
+      case Flow.isFlowLoop(flowElement):
+        return this.formatLoop(flowElement);
+      default:
+        return flowElement.name;
+    }
+  }
+
+  private formatLoop(element: Flow.FlowLoop): string {
+    return `LOOP: ${element.name}`;
+  }
+
+  private formatExceptStatement(): string {
+    return 'except:';
+  }
+
+  private formatTryStatement(): string {
+    return 'try:';
+  }
+
+  private formatFlowScreen(element: Flow.FlowScreen): string {
+    return `SCREEN: ${element.name}`;
+  }
+
+  private formatDefaultOutcome(): string {
+    return 'DEFAULT:';
   }
     
   private formatAssignment(element: Flow.FlowAssignment): string {

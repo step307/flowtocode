@@ -106,10 +106,10 @@ export class FlowParser {
     } else if (Flow.isFlowDecision(element)) {
       this.parseDecisionElement(parentNode, element);
     } else if (Flow.isFlowAssignment(element)) {
-      parentNode.addChild(new ParseTreeNode('ASSIGNMENT: ' + element.name, element));
+      parentNode.addChild(new ParseTreeNode('ASSIGNMENT', element));
       this.parseConnector(parentNode, element);
     } else if (Flow.isFlowSubflow(element)) {
-      parentNode.addChild(new ParseTreeNode('SUBFLOW: ' + element.name, element));
+      parentNode.addChild(new ParseTreeNode('SUBFLOW', element));
       this.parseConnector(parentNode, element);
     } else {
       parentNode.addChild(new ParseTreeNode(element.name, element));
@@ -122,28 +122,28 @@ export class FlowParser {
       actionElement.faultConnector != null ? this.getElementFromConnector(actionElement.faultConnector) : null;
     if (faultConnectorElement && parentNode.getFlowElement() !== faultConnectorElement) {
       // try references fault connector to avoid infinite recursion on above check
-      const tryNode = new ParseTreeNode('try:', faultConnectorElement);
+      const tryNode = new ParseTreeNode('try', faultConnectorElement);
       parentNode.addChild(tryNode);
       // reduce parse count to allow fault connector to be parsed
       this.elementParseCount.set(actionElement.name, (this.elementParseCount.get(actionElement.name) ?? 1) - 1);
       this.parseElement(tryNode, actionElement);
 
-      const catchNode = new ParseTreeNode('except:');
+      const catchNode = new ParseTreeNode('except');
       parentNode.addChild(catchNode);
       this.parseElement(catchNode, faultConnectorElement);
     } else {
-      parentNode.addChild(new ParseTreeNode('ACTION CALL: ' + actionElement.name, actionElement));
+      parentNode.addChild(new ParseTreeNode('ACTION_CALL', actionElement));
       this.parseConnector(parentNode, actionElement);
     }
   }
 
   private parseScreenElement(parentNode: ParseTreeNode, screenElement: Flow.FlowScreen): void {
-    parentNode.addChild(new ParseTreeNode('SCREEN: ' + screenElement.name, screenElement));
+    parentNode.addChild(new ParseTreeNode('SCREEN', screenElement));
     this.parseConnector(parentNode, screenElement);
   }
 
   private parseLoopElement(parentNode: ParseTreeNode, flowElement: Flow.FlowLoop): void {
-    const loopNode = new ParseTreeNode('LOOP: ' + flowElement.name, flowElement);
+    const loopNode = new ParseTreeNode('LOOP', flowElement);
     parentNode.addChild(loopNode);
     const nextValueElement =
       flowElement.nextValueConnector == null ? null : this.getElementFromConnector(flowElement.nextValueConnector);
@@ -160,7 +160,7 @@ export class FlowParser {
   }
 
   private parseDecisionElement(parentNode: ParseTreeNode, flowElement: Flow.FlowDecision): void {
-    const decision = new ParseTreeNode('DECISION: ' + flowElement.name, flowElement);
+    const decision = new ParseTreeNode('DECISION', flowElement);
     parentNode.addChild(decision);
     for (const ruleElement of flowElement.rules) {
       this.parseRuleElement(decision, ruleElement);
@@ -169,14 +169,14 @@ export class FlowParser {
       // const elseNode = new ParseTreeNode('END DECISION: ' + flowElement.name);
       // decision.addChild(elseNode);
     } else {
-      const elseNode = new ParseTreeNode('DEFAULT:', this.getElementFromConnector(flowElement.defaultConnector));
+      const elseNode = new ParseTreeNode('DEFAULT', flowElement);
       decision.addChild(elseNode);
       this.parseElement(elseNode, this.getElementFromConnector(flowElement.defaultConnector));
     }
   }
 
   private parseRuleElement(parentNode: ParseTreeNode, ruleElement: Flow.FlowRule): void {
-    const ruleNode = new ParseTreeNode('CASE: ' + ruleElement.label, ruleElement);
+    const ruleNode = new ParseTreeNode('CASE', ruleElement);
     parentNode.addChild(ruleNode);
     this.parseConnector(ruleNode, ruleElement);
   }
