@@ -5,7 +5,7 @@ import { FormatterInterface } from '../commands/ftc/generate/code.js';
 export class DefaultFtcFormatter implements FormatterInterface {
   public convertToPseudocode(node: ParseTreeNode, tabLevel: number = -1): string {
       let result = '';
-      if (node.getStatement()) {
+      if (node.getType()) {
         result += `${'  '.repeat(tabLevel)}${this.formatNodeStatement(node)}\n`;
       }
       for (const child of node.getChildren()) {
@@ -17,34 +17,27 @@ export class DefaultFtcFormatter implements FormatterInterface {
   private formatNodeStatement(node: ParseTreeNode): string {
     const flowElement = node.getFlowElement() as Flow.FlowElement;
 
-    switch (node.getStatement()) { // Any better way to identify "special" nodes?
+    switch (node.getType()) {
       case 'try':
         return this.formatTryStatement();
       case 'DEFAULT':
         return this.formatDefaultOutcome();
       case 'except':
         return this.formatExceptStatement();
-    }
-
-    if (!flowElement) {
-      return 'No flow element for the node';
-    }
-
-    switch (true) {
-      case Flow.isFlowActionCall(flowElement):
-        return this.formatActionCall(flowElement);
-      case Flow.isFlowDecision(flowElement):
-        return this.formatDecision(flowElement);
-      case Flow.isFlowSubflow(flowElement):
-        return this.formatSubflow(flowElement);
-      case Flow.isFlowRule(flowElement):
-        return this.formatRule(flowElement);
-      case Flow.isFlowAssignment(flowElement):
-        return this.formatAssignment(flowElement);
-      case Flow.isFlowScreen(flowElement):
-        return this.formatFlowScreen(flowElement);
-      case Flow.isFlowLoop(flowElement):
-        return this.formatLoop(flowElement);
+      case 'ACTION_CALL':
+        return this.formatActionCall(flowElement as Flow.FlowActionCall);
+      case 'DECISION':
+        return this.formatDecision(flowElement as Flow.FlowDecision);
+      case 'SUBFLOW':
+        return this.formatSubflow(flowElement as Flow.FlowSubflow);
+      case 'CASE':
+        return this.formatRule(flowElement as Flow.FlowRule);
+      case 'ASSIGNMENT':
+        return this.formatAssignment(flowElement as Flow.FlowAssignment);
+      case 'SCREEN':
+        return this.formatFlowScreen(flowElement as Flow.FlowScreen);
+      case 'LOOP':
+        return this.formatLoop(flowElement as Flow.FlowLoop);
       default:
         return flowElement.name;
     }

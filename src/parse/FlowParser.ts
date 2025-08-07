@@ -2,23 +2,23 @@
 import * as Flow from '../flow/Flow.js';
 
 export class ParseTreeNode {
-  private statement: string;
+  private type: string;
   private parent?: ParseTreeNode;
   private flowElement?: Flow.FlowBaseElement;
   private children: ParseTreeNode[];
 
-  public constructor(statement?: string, flowElement?: Flow.FlowBaseElement) {
-    this.statement = statement ? statement : '';
+  public constructor(type?: string, flowElement?: Flow.FlowBaseElement) {
+    this.type = type ? type : '';
     this.flowElement = flowElement;
     this.children = [];
   }
 
-  public getStatement(): string {
-    return this.statement;
+  public getType(): string {
+    return this.type;
   }
 
   public setStatement(statement: string): void {
-    this.statement = statement;
+    this.type = statement;
   }
 
   public getParent(): ParseTreeNode | undefined {
