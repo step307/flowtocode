@@ -1,11 +1,11 @@
-import { ParseTreeNode } from '../parse/FlowParser.js';
+import { ParseTreeNode, NodeType } from '../parse/FlowParser.js';
 import * as Flow from '../flow/Flow.js';
 import { FormatterInterface } from '../commands/ftc/generate/code.js';
 
 export class DefaultFtcFormatter implements FormatterInterface {
   public convertToPseudocode(node: ParseTreeNode, tabLevel: number = -1): string {
       let result = '';
-      if (node.getType()) {
+      if (node.getType() !== NodeType.ROOT) {
         result += `${'  '.repeat(tabLevel)}${this.formatNodeStatement(node)}\n`;
       }
       for (const child of node.getChildren()) {
@@ -18,29 +18,35 @@ export class DefaultFtcFormatter implements FormatterInterface {
     const flowElement = node.getFlowElement() as Flow.FlowElement;
 
     switch (node.getType()) {
-      case 'try':
+      case NodeType.TRY:
         return this.formatTryStatement();
-      case 'DEFAULT':
+      case NodeType.DEFAULT_OUTCOME:
         return this.formatDefaultOutcome();
-      case 'except':
+      case NodeType.EXCEPT:
         return this.formatExceptStatement();
-      case 'ACTION_CALL':
+      case NodeType.ACTION_CALL:
         return this.formatActionCall(flowElement as Flow.FlowActionCall);
-      case 'DECISION':
+      case NodeType.DECISION:
         return this.formatDecision(flowElement as Flow.FlowDecision);
-      case 'SUBFLOW':
+      case NodeType.SUBFLOW:
         return this.formatSubflow(flowElement as Flow.FlowSubflow);
-      case 'CASE':
+      case NodeType.CASE:
         return this.formatRule(flowElement as Flow.FlowRule);
-      case 'ASSIGNMENT':
+      case NodeType.ASSIGNMENT:
         return this.formatAssignment(flowElement as Flow.FlowAssignment);
-      case 'SCREEN':
+      case NodeType.SCREEN:
         return this.formatFlowScreen(flowElement as Flow.FlowScreen);
-      case 'LOOP':
+      case NodeType.LOOP:
         return this.formatLoop(flowElement as Flow.FlowLoop);
+      case NodeType.ALREADY_VISITED:
+        return this.formatAlreadyVisited(flowElement);
       default:
         return flowElement.name;
     }
+  }
+
+  private formatAlreadyVisited(element: Flow.FlowElement): string {
+    return `ALREADY OUTPUT: ${element.name}`;
   }
 
   private formatLoop(element: Flow.FlowLoop): string {
