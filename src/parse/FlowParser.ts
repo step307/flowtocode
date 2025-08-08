@@ -20,10 +20,10 @@ export enum NodeType {
 export class ParseTreeNode {
   private type: NodeType;
   private parent?: ParseTreeNode;
-  private flowElement?: Flow.FlowBaseElement;
+  private flowElement?: Flow.FlowElement;
   private children: ParseTreeNode[];
 
-  public constructor(type: NodeType, flowElement?: Flow.FlowBaseElement) {
+  public constructor(type: NodeType, flowElement?: Flow.FlowElement) {
     this.type = type;
     this.flowElement = flowElement;
     this.children = [];
@@ -45,11 +45,11 @@ export class ParseTreeNode {
     this.parent = parent;
   }
 
-  public getFlowElement(): Flow.FlowBaseElement | undefined {
+  public getFlowElement(): Flow.FlowElement | undefined {
     return this.flowElement;
   }
 
-  public setFlowElement(flowElement: Flow.FlowBaseElement | undefined): void {
+  public setFlowElement(flowElement: Flow.FlowElement | undefined): void {
     this.flowElement = flowElement;
   }
 

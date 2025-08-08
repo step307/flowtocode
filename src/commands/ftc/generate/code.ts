@@ -4,7 +4,8 @@ import { Messages } from '@salesforce/core';
 import * as xml2js from 'xml2js';
 import { Flow } from '../../../flow/Flow.js';
 import { FlowParser, ParseTreeNode } from '../../../parse/FlowParser.js';
-import { DefaultFtcFormatter } from '../../../format/DefaultFtcFormatter.js';
+// import { DefaultFtcFormatter } from '../../../format/DefaultFtcFormatter.js';
+import { JsFormatter } from '../../../format/JsFormatter.js';
 
 Messages.importMessagesDirectoryFromMetaUrl(import.meta.url);
 const messages = Messages.loadMessages('flowtocode', 'ftc.generate.code');
@@ -54,9 +55,10 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
     const parser: xml2js.Parser = new xml2js.Parser({ explicitArray: false });
     const flow: Flow = ((await parser.parseStringPromise(fileContent)) as ParsedXml).Flow;
     const flowParser: FlowParser = new FlowParser();
-    const formatter: FormatterInterface = new DefaultFtcFormatter();
+    const formatter: FormatterInterface = new JsFormatter(); // TODO: add format selection
     const treeNode: ParseTreeNode = flowParser.parse(flow);
     const parseTree: string = formatter.convertToPseudocode(treeNode);
+    this.log(parseTree); // TODO: remove me
     const outputPath: string = FtcGenerateCode.getOutputPath(filepath, flags.output);
     await fs.writeFile(outputPath, parseTree, 'utf-8');
     this.log(`Output written to ${outputPath}`);
