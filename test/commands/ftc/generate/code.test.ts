@@ -27,4 +27,10 @@ describe('ftc generate code', () => {
     const output: string = await fs.readFile('./test/resources/test_decision.ftc', 'utf8');
     expect(output.replace(/\r/g, '')).to.equal(expected.replace(/\r/g, ''));
   });
+  it('runs on subflow', async () => {
+    await FtcGenerateCode.run(['--file', './test/resources/test_subflow.flow-meta.xml']);
+    const expected: string = await fs.readFile('./test/resources/test_subflow.flow.expected', 'utf8');
+    const output: string = await fs.readFile('./test/resources/test_subflow.ftc', 'utf8');
+    expect(output.replace(/\r/g, '')).to.equal(expected.replace(/\r/g, ''));
+  });
 });
