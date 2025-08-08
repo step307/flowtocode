@@ -82,7 +82,7 @@ export class JsFormatter implements FormatterInterface {
   }
 
   private formatDefaultOutcome(node: ParseTreeNode): string {
-    return `else {${this.formatNodeChildren(node)}}`;
+    return `else {\n${this.formatNodeChildren(node)}\n}`;
   }
     
   private formatAssignment(node: ParseTreeNode): string {
@@ -121,12 +121,12 @@ export class JsFormatter implements FormatterInterface {
 
   private formatDecision(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowDecision;
-    return `// ${element.label}. ${element.description ?? ''}${this.formatNodeChildren(node)}`;
+    return `// ${element.label}. ${element.description ?? ''}\n${this.formatNodeChildren(node)}`;
   }
 
   private formatRule(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowRule;
-    return `/*?else*/ if (true/* ${element.conditionLogic} : ${JSON.stringify(element.conditions)} */) { // ${element.label} ${element.description ?? ''}
+    return `/* ?else */ if (true /* ${element.conditionLogic} : ${JSON.stringify(element.conditions)} */) { // ${element.label} ${element.description ?? ''}
     ${this.formatNodeChildren(node)}
     }`;
   }
