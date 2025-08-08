@@ -19,7 +19,7 @@ type ParsedXml = {
 };
 
 export interface FormatterInterface {
-  convertToPseudocode(node: ParseTreeNode, tabLevel?: number): string;
+  convertToPseudocode(node: ParseTreeNode, tabLevel?: number): Promise<string>;
 }
 export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
   public static readonly summary = messages.getMessage('summary');
@@ -57,7 +57,7 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
     const flowParser: FlowParser = new FlowParser();
     const formatter: FormatterInterface = new JsFormatter(); // TODO: add format selection
     const treeNode: ParseTreeNode = flowParser.parse(flow);
-    const parseTree: string = formatter.convertToPseudocode(treeNode);
+    const parseTree: string = await formatter.convertToPseudocode(treeNode);
     this.log(parseTree); // TODO: remove me
     const outputPath: string = FtcGenerateCode.getOutputPath(filepath, flags.output);
     await fs.writeFile(outputPath, parseTree, 'utf-8');

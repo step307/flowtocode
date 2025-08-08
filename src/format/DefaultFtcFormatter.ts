@@ -3,13 +3,19 @@ import * as Flow from '../flow/Flow.js';
 import { FormatterInterface } from '../commands/ftc/generate/code.js';
 
 export class DefaultFtcFormatter implements FormatterInterface {
-  public convertToPseudocode(node: ParseTreeNode, tabLevel: number = -1): string {
+  public convertToPseudocode(node: ParseTreeNode): Promise<string> {
+      return Promise.resolve(
+        this.formatPseudocode(node, -1)
+      );
+  }
+
+  public formatPseudocode(node: ParseTreeNode, tabLevel: number = -1): string {
       let result = '';
       if (node.getType() !== NodeType.ROOT) {
         result += `${'  '.repeat(tabLevel)}${this.formatNodeStatement(node)}\n`;
       }
       for (const child of node.getChildren()) {
-        result += this.convertToPseudocode(child, tabLevel + 1);
+        result += this.formatPseudocode(child, tabLevel + 1);
       }
       return result;
   }

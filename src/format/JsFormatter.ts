@@ -1,14 +1,22 @@
+import prettier from 'prettier';
 import { ParseTreeNode, NodeType } from '../parse/FlowParser.js';
 import * as Flow from '../flow/Flow.js';
 import { FormatterInterface } from '../commands/ftc/generate/code.js';
+import { FlowAssignmentItem } from '../flow/Flow.js';
 
 export class JsFormatter implements FormatterInterface {
-  public convertToPseudocode(node: ParseTreeNode): string {
+  private functions: Map<string, string> = new Map<string, string>();
+
+  public convertToPseudocode(node: ParseTreeNode): Promise<string> {
       let result = '';
-      result += 'main() {\n';
+      result += 'function main() {\n';
       result += this.formatNodeChildren(node);
       result += '\n}';
-      return result;
+
+      const functions = Array.from(this.functions.entries())
+        .map(([name, body]) => `function ${name}() {\n${body}\n}`).join('');
+
+      return prettier.format(functions + '\n\n' + result, {parser: 'babel'});
   }
 
   private formatNodeChildren(node: ParseTreeNode): string {
@@ -42,12 +50,12 @@ export class JsFormatter implements FormatterInterface {
       case NodeType.ALREADY_VISITED:
         return this.formatAlreadyVisited(flowElement);
       default:
-        return flowElement.name;
+        return `${flowElement.name}();`;
     }
   }
 
   private formatAlreadyVisited(element: Flow.FlowElement): string {
-    return `GO TO ${element.name}`; // TODO: should be a proper function call
+    return `${element.name}();`; // TODO: should be a proper function call
   }
 
   private formatLoop(node: ParseTreeNode): string {
@@ -60,46 +68,71 @@ export class JsFormatter implements FormatterInterface {
   }
 
   private formatExceptStatement(node: ParseTreeNode): string {
-    return 'catch {\n' + this.formatNodeChildren(node) + '\n}';
+    return `catch (e) {\n${this.formatNodeChildren(node)}\n}`;
   }
 
   private formatTryStatement(node: ParseTreeNode): string {
-    return 'try {\n' + this.formatNodeChildren(node) + '\n}';
+    return `try {\n${this.formatNodeChildren(node)}\n}`;
   }
 
   private formatFlowScreen(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowScreen;
-    return `show_${element.name}(); // ${element.label}\n${this.formatNodeChildren(node)}`;
+    // this.functions.set(element.name, `// Show ${element.label} ${element.description ?? ''}`);
+    return `${element.name}(); // Show ${element.label}${this.formatNodeChildren(node)}`;
   }
 
   private formatDefaultOutcome(node: ParseTreeNode): string {
-    return 'else {\n' + this.formatNodeChildren(node) + '\n}';
+    return `else {${this.formatNodeChildren(node)}}`;
   }
     
   private formatAssignment(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowAssignment;
-    return `ASSIGNMENT: ${element.name};${this.formatNodeChildren(node)}`;
+    this.functions.set(element.name, this.formatAssignments(element.assignmentItems ?? []));
+    return `${element.name}();${this.formatNodeChildren(node)}`;
   }
+
+  private formatAssignments(assignmentItems: FlowAssignmentItem[]): string {
+    return Array.isArray(assignmentItems) 
+      ? assignmentItems.map((item: FlowAssignmentItem) => 
+        `${item.assignToReference}${this.formatAssignOperator(item.operator)}${JSON.stringify(item.value)};`
+      ).join('')
+      : '';
+  }
+
+  private formatAssignOperator(operator: string): string {
+    switch (operator) {
+      case 'Add':
+        return ' += ';
+      case 'Subtract':
+        return ' -= ';
+      case 'AddItem':
+        return '[]= ';
+      case 'Assign':
+        return ' = ';
+      default:
+        return operator;
+    }
+  } 
 
   private formatSubflow(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowSubflow;
-    return `call_${element.name}(); // ${element.flowName}\n${this.formatNodeChildren(node)}`;
+    return `call_${element.name}(); // ${element.flowName}${this.formatNodeChildren(node)}`;
   }
 
   private formatDecision(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowDecision;
-    return `// ${element.label}. ${element.description ?? ''}\n${this.formatNodeChildren(node)}`;
+    return `// ${element.label}. ${element.description ?? ''}${this.formatNodeChildren(node)}`;
   }
 
   private formatRule(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowRule;
-    return `(?else)if (${element.conditionLogic} : ${JSON.stringify(element.conditions)}) { // ${element.label} ${element.description ?? ''}
+    return `/*?else*/ if (true/* ${element.conditionLogic} : ${JSON.stringify(element.conditions)} */) { // ${element.label} ${element.description ?? ''}
     ${this.formatNodeChildren(node)}
     }`;
   }
 
   private formatActionCall(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowActionCall;
-    return `do_${element.name}(); // ${element.label}\n${this.formatNodeChildren(node)}`;
+    return `do_${element.name}(); // ${element.label}${this.formatNodeChildren(node)}`;
   }
 }
