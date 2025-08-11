@@ -37,6 +37,7 @@ export type Flow = Metadata & {
   timeZoneSidKey?: string;
   transforms?: FlowTransform[];
   triggerOrder?: number;
+  variables?: FlowVariable[];
 };
 export function isFlow(obj: unknown): obj is Flow {
   return typeof obj === 'object' && obj !== null && 'description' in obj;
@@ -108,10 +109,16 @@ export type FlowActionCall = FlowNode & {
   actionType: string;
   connector: FlowConnector;
   faultConnector: FlowConnector;
+  inputParameters: FlowActionCallInputParameter[];
 };
 export function isFlowActionCall(obj: unknown): obj is FlowActionCall {
   return typeof obj === 'object' && obj !== null && 'actionName' in obj;
 }
+
+export type FlowActionCallInputParameter = {
+  name: string;
+  value: FlowElementReferenceOrValue;
+};
 
 export type FlowLoop = FlowNode & {
   assignNextValueToReference?: string;
@@ -233,6 +240,17 @@ export type FlowTransformValue = {
   rightValue: FlowElementReferenceOrValue;
 };
 
+export type FlowVariable = FlowElement & {
+  apexClass: string;
+  dataType: FlowDataType;
+  isCollection: boolean;
+  isInput: boolean;
+  isOutput: boolean;
+  objectType: string;
+  scale: number;
+  value: FlowElementReferenceOrValue;
+};
+
 // =====================================================================================================================
 // Flow Enums
 // =====================================================================================================================
@@ -253,12 +271,16 @@ export enum FlowAssignmentOperator {
 }
 
 export enum FlowDataType {
+  Apex = 'Apex',
   Boolean = 'Boolean',
   Currency = 'Currency',
   Date = 'Date',
   DateTime = 'DateTime',
   Number = 'Number',
+  Multipicklist = 'Multipicklist',
+  Picklist = 'Picklist',
   String = 'String',
+  sObject = 'sObject',
 }
 
 export enum FlowWaitConditionType {

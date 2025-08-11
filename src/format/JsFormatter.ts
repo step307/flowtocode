@@ -1,27 +1,61 @@
 import prettier from 'prettier';
-import { ParseTreeNode, NodeType } from '../parse/FlowParser.js';
+import { ParseTreeNode, NodeType, RootNode } from '../parse/FlowParser.js';
 import * as Flow from '../flow/Flow.js';
 import { FormatterInterface } from '../commands/ftc/generate/code.js';
 import { FlowAssignmentItem } from '../flow/Flow.js';
 
 export class JsFormatter implements FormatterInterface {
   private functions: Map<string, string> = new Map<string, string>();
+  private revisitedElements: string[] = [];
 
   public convertToPseudocode(node: ParseTreeNode): Promise<string> {
-      let result = '';
-      result += 'function main() {\n';
-      result += this.formatNodeChildren(node);
-      result += '\n}';
+    
+    let result = '';
+    let variables: Flow.FlowVariable[] = [];
 
-      const functions = Array.from(this.functions.entries())
-        .map(([name, body]) => `function ${name}() {\n${body}\n}`).join('');
+    this.revisitedElements = this.filterNodes(node, n => n.getType() === NodeType.ALREADY_VISITED)
+    .map(n => n.getFlowElement()?.name ?? '');
 
-      return prettier.format(functions + '\n\n' + result, {parser: 'babel'});
+    if (node.getType() === NodeType.ROOT) {
+      variables = (node as RootNode).flow.variables ?? [];
+    }
+
+    result += 'function main('
+     + variables.filter(v => v.isInput).map(v => `${v.name}: ${v.dataType}`).join(', ')
+     + ') {\n'
+     + variables.filter(v => !v.isInput).map(v => `  let ${v.name}: ${v.dataType} = ${v.value ? this.formatFlowElementReferenceOrValue(v.value) : 'null'};`).join('\n')
+     + '\n\n'
+     + this.formatNodeChildren(node)
+     + 'return [' + variables.filter(v => v.isOutput).map(v => v.name).join(', ') + '];'
+     + '\n}';
+
+    // Functions may be only collected after the formating round, as they are "pitched" from the traverse
+    const functions = Array.from(this.functions.entries())
+      .map(([name, body]) => `function ${name}() {\n${body}\n}`).join('');
+    
+    return prettier.format(functions + '\n\n' + result, {parser: 'babel-ts'});
   }
 
   private formatNodeChildren(node: ParseTreeNode): string {
     return node.getChildren().map(child => this.formatNode(child)).join('\n');
   }
+
+  private filterNodes(node: ParseTreeNode, callback: (node: ParseTreeNode) => boolean): ParseTreeNode[] {
+      const results: ParseTreeNode[] = [];
+      
+      const traverse = (currentNode: ParseTreeNode): void => {
+        if (callback(currentNode)) {
+          results.push(currentNode);
+        }
+        
+        for (const child of currentNode.getChildren()) {
+          traverse(child);
+        }
+      };
+  
+      traverse(node);
+      return results;
+    }
 
   private formatNode(node: ParseTreeNode): string {
     const flowElement = node.getFlowElement() as Flow.FlowElement;
@@ -42,7 +76,7 @@ export class JsFormatter implements FormatterInterface {
       case NodeType.CASE:
         return this.formatRule(node);
       case NodeType.ASSIGNMENT:
-        return this.formatAssignment(node);
+        return this.formatAssignmentNode(node);
       case NodeType.SCREEN:
         return this.formatFlowScreen(node);
       case NodeType.LOOP:
@@ -54,17 +88,36 @@ export class JsFormatter implements FormatterInterface {
     }
   }
 
+  private formatNodeChain(node: ParseTreeNode, nodeOwnBody: string): string {
+    if (node.getFlowElement() === null || node.getFlowElement() === undefined) {
+      return nodeOwnBody;
+    }
+    
+    const element = node.getFlowElement() as Flow.FlowElement;
+
+    // Revisited nodes should be encapsulated as functions to call them from multiple places of the tree
+    if (this.revisitedElements.includes(element.name)) {
+      this.functions.set(element.name, nodeOwnBody + this.formatNodeChildren(node));
+      return `${element.name}()\n`;
+    }
+
+    return nodeOwnBody;
+  }
+
   private formatAlreadyVisited(element: Flow.FlowElement): string {
-    return `${element.name}();`; // TODO: should be a proper function call
+    return `${element.name}();`;
   }
 
   private formatLoop(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowLoop;
-    return `foreach (${element.collectionReference} /*${element.iterationOrder}*/)
+    const body = `
+    // ${element.label}
+    for (let ${element.name} of ${element.collectionReference} /*${element.iterationOrder}*/)
       {
         ${this.formatNodeChildren(node)}
       }
     `;
+    return this.formatNodeChain(node, body);
   }
 
   private formatExceptStatement(node: ParseTreeNode): string {
@@ -77,26 +130,32 @@ export class JsFormatter implements FormatterInterface {
 
   private formatFlowScreen(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowScreen;
-    // this.functions.set(element.name, `// Show ${element.label} ${element.description ?? ''}`);
-    return `${element.name}(); // Show ${element.label}${this.formatNodeChildren(node)}`;
+    return this.formatNodeChain(node, `${element.name}.show(); // Show ${element.label} ${element.description ?? ''}`);
   }
 
   private formatDefaultOutcome(node: ParseTreeNode): string {
     return `else {\n${this.formatNodeChildren(node)}\n}`;
   }
     
-  private formatAssignment(node: ParseTreeNode): string {
+  private formatAssignmentNode(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowAssignment;
-    this.functions.set(element.name, this.formatAssignments(element.assignmentItems ?? []));
-    return `${element.name}();${this.formatNodeChildren(node)}`;
+    return this.formatNodeChain(node, `// ${element.label}\n${this.formatAssignments(element.assignmentItems ?? [])}`);
   }
 
   private formatAssignments(assignmentItems: FlowAssignmentItem[]): string {
-    return Array.isArray(assignmentItems) 
-      ? assignmentItems.map((item: FlowAssignmentItem) => 
-        `${item.assignToReference}${this.formatAssignOperator(item.operator)}${JSON.stringify(item.value)};`
-      ).join('')
-      : '';
+    const items = Array.isArray(assignmentItems) ? assignmentItems : [assignmentItems];
+
+    return items.map((item: FlowAssignmentItem) =>
+      `${item.assignToReference}${this.formatAssignOperator(item.operator)}${this.formatFlowElementReferenceOrValue(item.value)};`
+    ).join('');
+  }
+
+  private formatFlowElementReferenceOrValue(value: Flow.FlowElementReferenceOrValue): string {
+    if (value.elementReference !== undefined) {
+      return value.elementReference;  
+    } else {
+      return JSON.stringify(value);
+    }
   }
 
   private formatAssignOperator(operator: string): string {
@@ -112,16 +171,16 @@ export class JsFormatter implements FormatterInterface {
       default:
         return operator;
     }
-  } 
+  }
 
   private formatSubflow(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowSubflow;
-    return `call_${element.name}(); // ${element.flowName}${this.formatNodeChildren(node)}`;
+    return this.formatNodeChain(node, `// Call subflow ${element.flowName}$`);
   }
 
   private formatDecision(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowDecision;
-    return `// ${element.label}. ${element.description ?? ''}\n${this.formatNodeChildren(node)}`;
+    return this.formatNodeChain(node, `// ${element.label}. ${element.description ?? ''}`);
   }
 
   private formatRule(node: ParseTreeNode): string {
@@ -133,6 +192,10 @@ export class JsFormatter implements FormatterInterface {
 
   private formatActionCall(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowActionCall;
-    return `do_${element.name}(); // ${element.label}${this.formatNodeChildren(node)}`;
+    const params = Array.isArray(element.inputParameters) ? element.inputParameters : [element.inputParameters];
+    const body = `${element.actionType}.${element.actionName}({
+      ${params.map(param => param.name + ': ' + this.formatFlowElementReferenceOrValue(param.value)).join(', ')}
+    });`;
+    return this.formatNodeChain(node, body);
   }
 }

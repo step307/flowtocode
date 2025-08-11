@@ -52,8 +52,8 @@ export default class FtcGenerateCode extends SfCommand<FtcGenerateCodeResult> {
 
     const filepath: string = flags.file;
     const fileContent: string = await fs.readFile(filepath, 'utf-8');
-    const parser: xml2js.Parser = new xml2js.Parser({ explicitArray: false });
-    const flow: Flow = ((await parser.parseStringPromise(fileContent)) as ParsedXml).Flow;
+    const xmlParser: xml2js.Parser = new xml2js.Parser({ explicitArray: false, valueProcessors: [xml2js.processors.parseBooleans] });
+    const flow: Flow = ((await xmlParser.parseStringPromise(fileContent)) as ParsedXml).Flow;
     const flowParser: FlowParser = new FlowParser();
     const formatter: FormatterInterface = new JsFormatter(); // TODO: add format selection
     const treeNode: ParseTreeNode = flowParser.parse(flow);

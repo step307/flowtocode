@@ -63,6 +63,14 @@ export class ParseTreeNode {
   }
 }
 
+export class RootNode extends ParseTreeNode {
+  public flow: Flow.Flow;
+  public constructor(flowElement: Flow.Flow) {
+    super(NodeType.ROOT);
+    this.flow = flowElement;
+  }
+}
+
 export class FlowParser {
   private flowElementByName: Map<string, Flow.FlowBaseElement>;
   private flowLoopStack: Flow.FlowLoop[];
@@ -77,7 +85,7 @@ export class FlowParser {
   public parse(flow: Flow.Flow): ParseTreeNode {
     this.flowElementByName = this.getFlowElementByName(flow);
 
-    const root = new ParseTreeNode(NodeType.ROOT);
+    const root = new RootNode(flow);
     if (flow.start.connector) {
       const startElement: Flow.FlowElement = this.getElementFromConnector(flow.start.connector);
 
