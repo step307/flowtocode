@@ -9,31 +9,41 @@ export class JsFormatter implements FormatterInterface {
   private revisitedElements: string[] = [];
 
   public convertToPseudocode(node: ParseTreeNode): Promise<string> {
-    
-    let result = '';
     let variables: Flow.FlowVariable[] = [];
+    let flowName = 'main';
+    let description = `/** ${node.getFlowElement()?.description ?? ''} **/`;
 
     this.revisitedElements = this.filterNodes(node, n => n.getType() === NodeType.ALREADY_VISITED)
     .map(n => n.getFlowElement()?.name ?? '');
 
     if (node.getType() === NodeType.ROOT) {
-      variables = (node as RootNode).flow.variables ?? [];
+      const flow = (node as RootNode).flow;
+      variables = flow.variables ?? [];
+      flowName = flow.fullName ?? 'main';
+      description = `/** 
+      ${flow.label ? flow.label : ''}
+      ${flow.description ?? ''} **/`;
     }
 
-    result += 'function main('
+    const childrenCode = this.formatNodeChildren(node);
+    // Functions may be only collected after the formating round, as they are "pitched" from the traverse
+    const functions = Array.from(this.functions.entries())
+      .map(([name, body]) => `function ${name}() {\n${body}\n}`).join('');
+
+    const result = `
+    ${description}
+    function ${flowName}(`
      + variables.filter(v => v.isInput).map(v => `${v.name}: ${v.dataType}`).join(', ')
      + ') {\n'
      + variables.filter(v => !v.isInput).map(v => `  let ${v.name}: ${v.dataType} = ${v.value ? this.formatFlowElementReferenceOrValue(v.value) : 'null'};`).join('\n')
      + '\n\n'
-     + this.formatNodeChildren(node)
+     + functions
+     + '\n\n'
+     + childrenCode
      + 'return [' + variables.filter(v => v.isOutput).map(v => v.name).join(', ') + '];'
      + '\n}';
-
-    // Functions may be only collected after the formating round, as they are "pitched" from the traverse
-    const functions = Array.from(this.functions.entries())
-      .map(([name, body]) => `function ${name}() {\n${body}\n}`).join('');
     
-    return prettier.format(functions + '\n\n' + result, {parser: 'babel-ts'});
+    return prettier.format(result, {parser: 'babel-ts'});
   }
 
   private formatNodeChildren(node: ParseTreeNode): string {
