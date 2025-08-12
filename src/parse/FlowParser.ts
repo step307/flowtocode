@@ -130,14 +130,17 @@ export class FlowParser {
     } else if (Flow.isFlowDecision(element)) {
       this.parseDecisionElement(parentNode, element);
     } else if (Flow.isFlowAssignment(element)) {
-      parentNode.addChild(new ParseTreeNode(NodeType.ASSIGNMENT, element));
-      this.parseConnector(parentNode, element);
+      const assignmentNode = new ParseTreeNode(NodeType.ASSIGNMENT, element);
+      parentNode.addChild(assignmentNode);
+      this.parseConnector(assignmentNode, element);
     } else if (Flow.isFlowSubflow(element)) {
-      parentNode.addChild(new ParseTreeNode(NodeType.SUBFLOW, element));
-      this.parseConnector(parentNode, element);
+      const subflowNode = new ParseTreeNode(NodeType.SUBFLOW, element);
+      parentNode.addChild(subflowNode);
+      this.parseConnector(subflowNode, element);
     } else {
-      parentNode.addChild(new ParseTreeNode(NodeType.OTHER, element));
-      this.parseConnector(parentNode, element);
+      const otherNode = new ParseTreeNode(NodeType.OTHER, element);
+      parentNode.addChild(otherNode);
+      this.parseConnector(otherNode, element);
     }
   }
 
@@ -162,8 +165,9 @@ export class FlowParser {
   }
 
   private parseScreenElement(parentNode: ParseTreeNode, screenElement: Flow.FlowScreen): void {
-    parentNode.addChild(new ParseTreeNode(NodeType.SCREEN, screenElement));
-    this.parseConnector(parentNode, screenElement);
+    const screenNode = new ParseTreeNode(NodeType.SCREEN, screenElement);
+    parentNode.addChild(screenNode);
+    this.parseConnector(screenNode, screenElement);
   }
 
   private parseLoopElement(parentNode: ParseTreeNode, flowElement: Flow.FlowLoop): void {
