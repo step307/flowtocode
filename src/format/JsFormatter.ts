@@ -42,7 +42,7 @@ export class JsFormatter implements FormatterInterface {
      + childrenCode
      + 'return [' + variables.filter(v => v.isOutput).map(v => v.name).join(', ') + '];'
      + '\n}';
-    
+
     return prettier.format(result, {parser: 'babel-ts'});
   }
 
@@ -94,7 +94,7 @@ export class JsFormatter implements FormatterInterface {
       case NodeType.ALREADY_VISITED:
         return this.formatAlreadyVisited(flowElement);
       default:
-        return `${flowElement.name}();`;
+        return this.formatNodeChain(node, `// ${flowElement.name} ${JSON.stringify(flowElement)}`);
     }
   }
 
@@ -107,11 +107,13 @@ export class JsFormatter implements FormatterInterface {
 
     // Revisited nodes should be encapsulated as functions to call them from multiple places of the tree
     if (this.revisitedElements.includes(element.name)) {
-      this.functions.set(element.name, nodeOwnBody + this.formatNodeChildren(node));
-      return `${element.name}()\n`;
+      if (!this.functions.has(element.name)) {
+        this.functions.set(element.name, nodeOwnBody + this.formatNodeChildren(node));
+      }
+      return `${element.name}();\n`;
     }
 
-    return nodeOwnBody;
+    return nodeOwnBody + '\n' + this.formatNodeChildren(node);
   }
 
   private formatAlreadyVisited(element: Flow.FlowElement): string {
@@ -185,7 +187,7 @@ export class JsFormatter implements FormatterInterface {
 
   private formatSubflow(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowSubflow;
-    return this.formatNodeChain(node, `// Call subflow ${element.flowName}$`);
+    return this.formatNodeChain(node, `subflows.${element.flowName}.call();\n`); // TODO: render parameters
   }
 
   private formatDecision(node: ParseTreeNode): string {
