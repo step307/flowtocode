@@ -47,7 +47,7 @@ export class JsFormatter implements FormatterInterface {
   }
 
   private formatNodeChildren(node: ParseTreeNode): string {
-    return node.getChildren().map(child => this.formatNode(child)).join('\n');
+    return node.getChildren().map((child, index) => this.formatNode(child, index)).join('\n');
   }
 
   private filterNodes(node: ParseTreeNode, callback: (node: ParseTreeNode) => boolean): ParseTreeNode[] {
@@ -67,7 +67,7 @@ export class JsFormatter implements FormatterInterface {
       return results;
     }
 
-  private formatNode(node: ParseTreeNode): string {
+  private formatNode(node: ParseTreeNode, sequenceNr: number = 0): string {
     const flowElement = node.getFlowElement() as Flow.FlowElement;
 
     switch (node.getType()) {
@@ -84,7 +84,7 @@ export class JsFormatter implements FormatterInterface {
       case NodeType.SUBFLOW:
         return this.formatSubflow(node);
       case NodeType.CASE:
-        return this.formatRule(node);
+        return this.formatRule(node, sequenceNr);
       case NodeType.ASSIGNMENT:
         return this.formatAssignmentNode(node);
       case NodeType.SCREEN:
@@ -163,11 +163,7 @@ export class JsFormatter implements FormatterInterface {
   }
 
   private formatFlowElementReferenceOrValue(value: Flow.FlowElementReferenceOrValue): string {
-    if (value.elementReference !== undefined) {
-      return value.elementReference;  
-    } else {
-      return JSON.stringify(value);
-    }
+    return value.elementReference ?? JSON.stringify(value);
   }
 
   private formatAssignOperator(operator: string): string {
@@ -195,9 +191,23 @@ export class JsFormatter implements FormatterInterface {
     return this.formatNodeChain(node, `// ${element.label}. ${element.description ?? ''}`);
   }
 
-  private formatRule(node: ParseTreeNode): string {
+  private formatRule(node: ParseTreeNode, sequenceNr: number): string {
     const element = node.getFlowElement() as Flow.FlowRule;
-    return `/* ?else */ if (true /* ${element.conditionLogic} : ${JSON.stringify(element.conditions)} */) { // ${element.label} ${element.description ?? ''}
+    const conditions = Array.isArray(element.conditions) ? element.conditions : [element.conditions];
+
+    let condition: string =
+      element.conditionLogic === 'and' ? Array.from(conditions.keys()).map(key => key + 1).join(' AND ') :
+      element.conditionLogic === 'or'  ? Array.from(conditions.keys()).map(key => key + 1).join(' OR ') :
+      element.conditionLogic;
+
+    for (const [index, flowCondition] of conditions.entries()) {
+      condition = condition.replace(
+        String(index + 1),
+        `${flowCondition.operator}(${flowCondition.leftValueReference}, ${this.formatFlowElementReferenceOrValue(flowCondition.rightValue)})`
+      );
+    }
+
+    return `${sequenceNr ? 'else' : ''} if (${condition}) { // ${element.label} ${element.description ?? ''}
     ${this.formatNodeChildren(node)}
     }`;
   }
