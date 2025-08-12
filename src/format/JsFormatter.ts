@@ -27,8 +27,7 @@ export class JsFormatter implements FormatterInterface {
 
     const childrenCode = this.formatNodeChildren(node);
     // Functions may be only collected after the formating round, as they are "pitched" from the traverse
-    const functions = Array.from(this.functions.entries())
-      .map(([name, body]) => `function ${name}() {\n${body}\n}`).join('');
+    // const functions = Array.from(this.functions.entries()).map(([name, body]) => `function ${name}() {\n${body}\n}`).join('');
 
     const result = `
     ${description}
@@ -37,12 +36,12 @@ export class JsFormatter implements FormatterInterface {
      + ') {\n'
      + variables.filter(v => !v.isInput).map(v => `  let ${v.name}: ${v.dataType} = ${v.value ? this.formatFlowElementReferenceOrValue(v.value) : 'null'};`).join('\n')
      + '\n\n'
-     + functions
+     // + functions
      + '\n\n'
      + childrenCode
      + 'return [' + variables.filter(v => v.isOutput).map(v => v.name).join(', ') + '];'
      + '\n}';
-
+    // return Promise.resolve(result);
     return prettier.format(result, {parser: 'babel-ts', printWidth: 300});
   }
 
@@ -108,16 +107,16 @@ export class JsFormatter implements FormatterInterface {
     // Revisited nodes should be encapsulated as functions to call them from multiple places of the tree
     if (this.revisitedElements.includes(element.name)) {
       if (!this.functions.has(element.name)) {
-        this.functions.set(element.name, nodeOwnBody + this.formatNodeChildren(node));
+        this.functions.set(element.name, nodeOwnBody);
       }
-      return `${element.name}();\n`;
+      return `// [lbl] ${element.name}:\n${nodeOwnBody} \n ${this.formatNodeChildren(node)}`;
     }
 
     return nodeOwnBody + '\n' + this.formatNodeChildren(node);
   }
 
   private formatAlreadyVisited(element: Flow.FlowElement): string {
-    return `${element.name}();`;
+    return `// goto ${element.name};`;
   }
 
   private formatLoop(node: ParseTreeNode): string {
@@ -129,7 +128,7 @@ export class JsFormatter implements FormatterInterface {
         ${this.formatNodeChildren(node)}
       }
     `;
-    return this.formatNodeChain(node, body);
+    return body;
   }
 
   private formatExceptStatement(node: ParseTreeNode): string {
@@ -239,7 +238,7 @@ export class JsFormatter implements FormatterInterface {
     const params = Array.isArray(element.inputParameters) ? element.inputParameters : [element.inputParameters];
     const body = `${element.actionType}.call('${element.actionName}', {
       ${params.map(param => param.name + ': ' + this.formatFlowElementReferenceOrValue(param.value)).join(', ')}
-    });`;
+    }); // ${element.label} ${element.description ?? ''}`;
     return this.formatNodeChain(node, body);
   }
 }

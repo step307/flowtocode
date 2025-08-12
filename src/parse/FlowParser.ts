@@ -132,15 +132,15 @@ export class FlowParser {
     } else if (Flow.isFlowAssignment(element)) {
       const assignmentNode = new ParseTreeNode(NodeType.ASSIGNMENT, element);
       parentNode.addChild(assignmentNode);
-      this.parseConnector(assignmentNode, element);
+      this.parseConnector(parentNode, element);
     } else if (Flow.isFlowSubflow(element)) {
       const subflowNode = new ParseTreeNode(NodeType.SUBFLOW, element);
       parentNode.addChild(subflowNode);
-      this.parseConnector(subflowNode, element);
+      this.parseConnector(parentNode, element);
     } else {
       const otherNode = new ParseTreeNode(NodeType.OTHER, element);
       parentNode.addChild(otherNode);
-      this.parseConnector(otherNode, element);
+      this.parseConnector(parentNode, element);
     }
   }
 
@@ -167,7 +167,7 @@ export class FlowParser {
   private parseScreenElement(parentNode: ParseTreeNode, screenElement: Flow.FlowScreen): void {
     const screenNode = new ParseTreeNode(NodeType.SCREEN, screenElement);
     parentNode.addChild(screenNode);
-    this.parseConnector(screenNode, screenElement);
+    this.parseConnector(parentNode, screenElement);
   }
 
   private parseLoopElement(parentNode: ParseTreeNode, flowElement: Flow.FlowLoop): void {
