@@ -43,7 +43,7 @@ export class JsFormatter implements FormatterInterface {
      + 'return [' + variables.filter(v => v.isOutput).map(v => v.name).join(', ') + '];'
      + '\n}';
 
-    return prettier.format(result, {parser: 'babel-ts'});
+    return prettier.format(result, {parser: 'babel-ts', printWidth: 300});
   }
 
   private formatNodeChildren(node: ParseTreeNode): string {
@@ -94,7 +94,7 @@ export class JsFormatter implements FormatterInterface {
       case NodeType.ALREADY_VISITED:
         return this.formatAlreadyVisited(flowElement);
       default:
-        return this.formatNodeChain(node, `// ${flowElement.name} ${JSON.stringify(flowElement)}`);
+        return this.formatNodeChain(node, `${flowElement.name}(); // ${JSON.stringify(flowElement)}`);
     }
   }
 
@@ -133,20 +133,20 @@ export class JsFormatter implements FormatterInterface {
   }
 
   private formatExceptStatement(node: ParseTreeNode): string {
-    return `catch (e) {\n${this.formatNodeChildren(node)}\n}`;
+    return `catch (e) {\n${this.formatNodeChildren(node)}\n}`; // TODO: should it call formatNodeChain?
   }
 
   private formatTryStatement(node: ParseTreeNode): string {
-    return `try {\n${this.formatNodeChildren(node)}\n}`;
+    return `try {\n${this.formatNodeChildren(node)}\n}`; // TODO: should it call formatNodeChain?
   }
 
   private formatFlowScreen(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowScreen;
-    return this.formatNodeChain(node, `${element.name}.show(); // Show ${element.label} ${element.description ?? ''}`);
+    return this.formatNodeChain(node, `screen.show('${element.name}'); // Show ${element.label} ${element.description ?? ''}\n`);
   }
 
   private formatDefaultOutcome(node: ParseTreeNode): string {
-    return `else {\n${this.formatNodeChildren(node)}\n}`;
+    return `else {\n${this.formatNodeChildren(node)}\n}`; // TODO: should it call formatNodeChain?
   }
     
   private formatAssignmentNode(node: ParseTreeNode): string {
@@ -163,7 +163,17 @@ export class JsFormatter implements FormatterInterface {
   }
 
   private formatFlowElementReferenceOrValue(value: Flow.FlowElementReferenceOrValue): string {
-    return value.elementReference ?? JSON.stringify(value);
+    if (value.elementReference !== undefined) {
+      return value.elementReference;
+    } else if (value.numberValue !== undefined && value.numberValue !== null) {
+      return value.numberValue.toString();
+    } else if (value.stringValue !== undefined && value.stringValue !== null) {
+      return `"${value.stringValue ?? ''}"`;
+    } else if (value.booleanValue !== undefined && value.booleanValue !== null) {
+      return value.booleanValue.toString();
+    } else {
+      return JSON.stringify(value);
+    }
   }
 
   private formatAssignOperator(operator: string): string {
@@ -183,12 +193,12 @@ export class JsFormatter implements FormatterInterface {
 
   private formatSubflow(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowSubflow;
-    return this.formatNodeChain(node, `subflows.${element.flowName}.call();\n`); // TODO: render parameters
+    return this.formatNodeChain(node, `subflow.call('${element.flowName}');\n`); // TODO: render parameters
   }
 
   private formatDecision(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowDecision;
-    return this.formatNodeChain(node, `// ${element.label}. ${element.description ?? ''}`);
+    return this.formatNodeChain(node, `// Check: ${element.label}. ${element.description ?? ''}`);
   }
 
   private formatRule(node: ParseTreeNode, sequenceNr: number): string {
@@ -203,19 +213,31 @@ export class JsFormatter implements FormatterInterface {
     for (const [index, flowCondition] of conditions.entries()) {
       condition = condition.replace(
         String(index + 1),
-        `${flowCondition.operator}(${flowCondition.leftValueReference}, ${this.formatFlowElementReferenceOrValue(flowCondition.rightValue)})`
+        this.formatCondition(flowCondition)
       );
     }
 
-    return `${sequenceNr ? 'else' : ''} if (${condition}) { // ${element.label} ${element.description ?? ''}
+    return `${sequenceNr ? 'else' : ''} if (${condition}) { // Case: ${element.label} ${element.description ?? ''}
     ${this.formatNodeChildren(node)}
     }`;
+  }
+
+  private formatCondition(flowCondition: Flow.FlowCondition): string {
+    if (flowCondition.operator === Flow.FlowComparisonOperator.EqualTo) {
+      return `(${flowCondition.leftValueReference} === ${this.formatFlowElementReferenceOrValue(flowCondition.rightValue)})`;
+    } else if (flowCondition.operator === Flow.FlowComparisonOperator.NotEqualTo) {
+      return `(${flowCondition.leftValueReference} !== ${this.formatFlowElementReferenceOrValue(flowCondition.rightValue)})`;
+    } else if (flowCondition.operator === Flow.FlowComparisonOperator.IsNull && flowCondition.rightValue.booleanValue !== null) {
+      return `(${flowCondition.leftValueReference} ${flowCondition.rightValue.booleanValue ? '=' : '!'}== null)`;
+    } else {
+      return `${flowCondition.operator}(${flowCondition.leftValueReference}, ${this.formatFlowElementReferenceOrValue(flowCondition.rightValue)})`;
+    }
   }
 
   private formatActionCall(node: ParseTreeNode): string {
     const element = node.getFlowElement() as Flow.FlowActionCall;
     const params = Array.isArray(element.inputParameters) ? element.inputParameters : [element.inputParameters];
-    const body = `${element.actionType}.${element.actionName}({
+    const body = `${element.actionType}.call('${element.actionName}', {
       ${params.map(param => param.name + ': ' + this.formatFlowElementReferenceOrValue(param.value)).join(', ')}
     });`;
     return this.formatNodeChain(node, body);
