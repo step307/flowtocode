@@ -136,6 +136,25 @@
         </fields>
         <showFooter>true</showFooter>
         <showHeader>false</showHeader>
+        <connector>
+            <targetReference>Final_Screen</targetReference>
+        </connector>
+    </screens>
+    <screens>
+        <name>Final_Screen</name>
+        <label>Final Screen</label>
+        <locationX>176</locationX>
+        <locationY>866</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>true</allowPause>
+        <fields>
+            <name>FinalText</name>
+            <fieldText>Bye!</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+        <showFooter>true</showFooter>
+        <showHeader>false</showHeader>
     </screens>
     <screens>
         <name>Fault_Screen</name>
@@ -157,6 +176,9 @@
         </fields>
         <showFooter>true</showFooter>
         <showHeader>false</showHeader>
+        <connector>
+            <targetReference>Final_Screen</targetReference>
+        </connector>
     </screens>
     <screens>
         <name>Select_Items_Screen</name>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>59.0</apiVersion>
+    <description>Test flow.</description>
+    <environments>Default</environments>
+    <interviewLabel>Test Flow{!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Test Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Flow</processType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>someSubFlow</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <subflows>
+        <name>someSubFlow</name>
+        <label>someSubFlow</label>
+        <locationX>578</locationX>
+        <locationY>674</locationY>
+        <flowName>Name_of_the_subflow</flowName>
+        <inputAssignments>
+            <name>VAR_IN_Method</name>
+            <value>
+                <stringValue>Test</stringValue>
+            </value>
+        </inputAssignments>
+    </subflows>
+</Flow>

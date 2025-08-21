@@ -99,6 +99,10 @@ export type FlowRule = FlowElement & {
   label: string;
 };
 
+export function isFlowRule(obj: unknown): obj is FlowRule {
+  return typeof obj === 'object' && obj !== null && 'conditionLogic' in obj;
+}
+
 export type FlowActionCall = FlowNode & {
   actionName: string;
   actionType: string;
