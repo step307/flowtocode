@@ -153,8 +153,7 @@ sf plugins
 ## Commands
 
 <!-- commands -->
-
-- [`sf ftc generate code`](#sf-ftc-generate-code)
+* [`sf ftc generate code`](#sf-ftc-generate-code)
 
 ## `sf ftc generate code`
 
@@ -181,5 +180,4 @@ DESCRIPTION
 EXAMPLES
   $ sf ftc generate code -f ./test.flow
 ```
-
 <!-- commandsstop -->
